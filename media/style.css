@@ -48,7 +48,7 @@ body {
   background: var(--vscode-input-background);
   color: var(--vscode-input-foreground);
   border: 1px solid var(--vscode-input-border, transparent);
-  border-radius: 4px; padding: 4px 8px; min-width: 180px;
+  border-radius: 4px; padding: 4px 8px; min-width: 0; flex: 1 1 140px; max-width: 100%;
 }
 .dvm-search:focus { outline: 1px solid var(--vscode-focusBorder); }
 .dvm-btn {
@@ -56,6 +56,7 @@ body {
   color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
   border: 1px solid var(--vscode-panel-border);
   border-radius: 4px; padding: 4px 10px; cursor: pointer; font-size: 12px;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0;
 }
 .dvm-btn:hover { background: var(--vscode-list-hoverBackground); }
 .dvm-btn.primary {
@@ -78,12 +79,15 @@ body {
 .dvm-select {
   background: var(--vscode-input-background); color: var(--vscode-input-foreground);
   border: 1px solid var(--vscode-input-border, transparent); border-radius: 4px; padding: 3px 6px;
+  max-width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis;
 }
+.dvm-lang-wrap { display: inline-flex; align-items: center; gap: 4px; min-width: 0; max-width: 100%; }
+.dvm-lang-label { color: var(--vscode-descriptionForeground); white-space: nowrap; }
+.dvm-lang { min-width: 0; }
 
 /* ---------- stats + legend ---------- */
-.dvm-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 6px 12px; border-bottom: 1px solid var(--vscode-panel-border); }
-.dvm-stat b { font-variant-numeric: tabular-nums; }
-.dvm-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 6px 12px; border-bottom: 1px solid var(--vscode-panel-border); color: var(--vscode-descriptionForeground); }
+.dvm-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 6px 12px; border-bottom: 1px solid var(--vscode-panel-border); overflow-wrap: anywhere; }
+.dvm-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 6px 12px; border-bottom: 1px solid var(--vscode-panel-border); color: var(--vscode-descriptionForeground); overflow-wrap: anywhere; }
 .dvm-legend .edge-sample { display: inline-block; width: 22px; border-top: 2px solid var(--dvm-edge); vertical-align: middle; margin-right: 4px; }
 .dvm-legend .dashed { border-top-style: dashed; }
 .dvm-legend .dotted { border-top-style: dotted; }
@@ -113,7 +117,8 @@ body {
 .dvm-col-title { font-size: 11px; font-weight: 600; fill: var(--vscode-descriptionForeground); }
 
 /* ---------- details ---------- */
-#details h2, .dvm-details h2 { font-size: 13px; margin: 0 0 4px; word-break: break-word; }
+#details h2, .dvm-details h2 { font-size: 13px; margin: 0 0 4px; word-break: break-word; overflow-wrap: anywhere; }
+.dvm-side { overflow-wrap: anywhere; }
 .dvm-h3 { font-size: 12px; margin: 10px 0 4px; }
 .dvm-kind { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; border-radius: 3px; padding: 1px 6px; margin-bottom: 6px; color: #fff; }
 .dvm-kind.app { background: var(--dvm-app); } .dvm-kind.url { background: var(--dvm-url); }
@@ -134,8 +139,18 @@ body {
 kbd { background: var(--vscode-keybindingLabel-background, #eee); border: 1px solid var(--vscode-panel-border); border-radius: 3px; padding: 0 4px; font-size: 11px; }
 
 /* ---------- sidebar ---------- */
-.dvm-sidebar { padding: 12px; }
+.dvm-sidebar { padding: 12px; overflow-wrap: anywhere; }
 .dvm-sidebar h1 { font-size: 13px; margin: 0 0 8px; }
 .dvm-sidebar h1.dvm-h1-gap { margin-top: 10px; }
-.dvm-sidebar .row { display: flex; justify-content: space-between; padding: 2px 0; }
+.dvm-sidebar .row { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
+.dvm-sidebar .row span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .dvm-sidebar .actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.dvm-sidebar .dvm-lang-wrap { margin-bottom: 8px; }
+
+/* ---------- bidirectional text ----------
+   Arabic UI uses dir="rtl" on <html>. Code identifiers, file paths,
+   Django names and keybindings always stay LTR and readable. The graph
+   canvas itself stays LTR so the app→template column order never flips. */
+[dir="rtl"] code, [dir="rtl"] kbd { direction: ltr; unicode-bidi: embed; }
+[dir="rtl"] .dvm-rel-list button { text-align: right; }
+.dvm-canvas-wrap, .dvm-canvas-wrap svg { direction: ltr; }
