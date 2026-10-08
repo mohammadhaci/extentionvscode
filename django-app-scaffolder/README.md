@@ -7,12 +7,42 @@ Your team approves one app built on the company template. Mark it as the
 **reference app**, and every new app is created by cloning it, so the template
 and its conventions carry over without being re-described anywhere.
 
+Built for projects where **coding agents do the work**: the same engine ships as a
+dependency-free Node CLI plus a `django-new-app` skill, so Claude Code, Codex and
+GitHub Copilot create apps the same deterministic way you would from VS Code.
+
+## Agent setup (once per project)
+
+1. Right-click the approved app → **Set as Reference App**.
+2. Run **Django Scaffolder: Install Agent Kit (CLI + Skill)**. It writes:
+   - `.django-scaffold/tool/`: the CLI (`cli.js` + `scaffold/`, CommonJS, Node only)
+   - `django-new-app/SKILL.md` into `.claude/skills` (Claude Code), `.agents/skills` (Codex)
+     and `.github/skills` (Copilot); configurable via `djangoScaffolder.agentSkillRoots`
+3. Commit `.django-scaffold.json`, `.django-scaffold/` and the skill folders, so cloud
+   agents get them too.
+
+From then on, ask any agent for "a new invoices section". The skill makes it:
+dry-run → create → review the diff → implement inside the new app following the reference →
+`makemigrations` / `check` / tests → `cli.js check`.
+
+```sh
+node .django-scaffold/tool/cli.js new invoices --entity Invoice --dry-run   # preview, writes nothing
+node .django-scaffold/tool/cli.js new invoices --entity Invoice             # create + register
+node .django-scaffold/tool/cli.js check                                     # exit 1 on structure issues (CI-friendly)
+node .django-scaffold/tool/cli.js apps --json
+node .django-scaffold/tool/cli.js reference apps/orders
+```
+
+The CLI writes registration edits directly; review them with `git diff`. Re-run
+**Install Agent Kit** after updating the extension to refresh the CLI.
+
 ## Commands
 
 | Command | What it does |
 | --- | --- |
 | **Django Scaffolder: Set as Reference App** | Right-click the approved app folder (or pick from a list). Saves `referenceApp` in `.django-scaffold.json`; commit it so the team shares the same reference. |
 | **Django Scaffolder: New App from Reference** | Asks for the new app name (e.g. `invoices`) and the singular entity name (e.g. `invoice`), shows a full preview, then creates the app on confirmation. |
+| **Django Scaffolder: Install Agent Kit (CLI + Skill)** | Copies the CLI and the agent skill into the project (see above). |
 | **Django Scaffolder: Check Apps Against Reference** | Report of every app's missing files compared to the reference (or `requiredFiles`), plus apps missing from `INSTALLED_APPS`. |
 
 ## What "New App" does
@@ -54,6 +84,8 @@ All keys are optional; VS Code validates the file with the bundled JSON schema.
 - Apps are discovered by `apps.py`; the reference app needs one.
 - Only one-entry-per-line app lists are edited; other layouts are reported for manual edits.
 - Reference apps are limited to 2,000 files, 2 MB per file and 30 MB total; symlinks are skipped.
+- When a one-word reference becomes a multi-word app (`order` → `purchase_order`), prose in
+  comments and strings gets the snake form too ("a customer purchase_order"); fix wording in review.
 - Names that are not plain singular/plural forms of the app name (e.g. `LineItem`
   inside `orders`) are not renamed — check the preview.
 
@@ -72,6 +104,11 @@ Press F5 with **Run Django App Scaffolder** (`.vscode/launch.json` in this folde
 ---
 
 ## بالعربي باختصار
+
+**مع الوكلاء (الاستخدام الأساسي):** حدّد القسم المرجعي، شغّل **Install Agent Kit** مرة وحدة، وارفع الملفات على git.
+بعدها اطلب من Claude أو Codex أو Copilot "اعمل قسم جديد للفواتير"، والمهارة بتخلّيه يستعمل الأداة ويلتزم بالقالب ويتحقق من النتيجة.
+
+**يدوياً من VS Code:**
 
 1. كليك يمين على القسم الأول المعتمد ← **Set as Reference App**.
 2. لكل قسم جديد: **New App from Reference**، ثم اكتب اسم القسم (مثلاً `invoices`) والاسم المفرد (`invoice`).

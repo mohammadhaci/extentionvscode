@@ -1,11 +1,11 @@
 import * as vscode from "vscode";
-import { CONFIG_FILE, parseConfig, ScaffoldConfig, withReferenceApp } from "./scaffold/config";
-import { expectedFiles, formatConformanceReport, missingFiles, AppConformance } from "./scaffold/conformance";
-import { guessSingular, splitWords, validateAppName } from "./scaffold/names";
+import { AGENT_TOOL_DIR, DEFAULT_SKILL_ROOTS, SKILL_NAME } from "./scaffold/agentKit";
+import { CONFIG_FILE, isSafeRelativePath, parseConfig, ScaffoldConfig, withReferenceApp } from "./scaffold/config";
+import { formatConformanceReport } from "./scaffold/conformance";
+import { guessSingular, validateAppName } from "./scaffold/names";
 import { planFiles, SourceFile } from "./scaffold/plan";
 import { formatPreview } from "./scaffold/preview";
-import { isRegistered, planSettingsRegistration, planUrlsRegistration, RegistrationEdit } from "./scaffold/registration";
-import { buildRenamePairs, createRenamer } from "./scaffold/rename";
+import { baseOf, checkConformance, FileText, joinPath as join, newAppRenamer, parentOf, planRegistrations, referenceEntity } from "./scaffold/workflow";
 
 const EXCLUDE_DIRS = "{**/node_modules/**,**/.venv/**,**/venv/**,**/env/**,**/site-packages/**,**/.git/**,**/.tox/**,**/__pycache__/**}";
 const MAX_FILES = 2000;
@@ -17,7 +17,8 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand("django-app-scaffolder.newApp", (uri?: vscode.Uri) => run(() => newApp(uri))),
     vscode.commands.registerCommand("django-app-scaffolder.setReference", (uri?: vscode.Uri) => run(() => setReference(uri))),
-    vscode.commands.registerCommand("django-app-scaffolder.checkApps", () => run(() => checkApps()))
+    vscode.commands.registerCommand("django-app-scaffolder.checkApps", () => run(() => checkApps())),
+    vscode.commands.registerCommand("django-app-scaffolder.installAgentKit", () => run(() => installAgentKit(context)))
   );
 }
 
@@ -41,9 +42,6 @@ function rel(folder: vscode.WorkspaceFolder, uri: vscode.Uri): string {
   const root = folder.uri.path.replace(/\/+$/, "");
   return uri.path === root ? "" : uri.path.startsWith(`${root}/`) ? uri.path.slice(root.length + 1) : uri.path;
 }
-const parentOf = (p: string): string => (p.includes("/") ? p.slice(0, p.lastIndexOf("/")) : "");
-const baseOf = (p: string): string => p.slice(p.lastIndexOf("/") + 1);
-const join = (dir: string, name: string): string => (dir ? `${dir}/${name}` : name);
 const uriOf = (folder: vscode.WorkspaceFolder, relPath: string): vscode.Uri =>
   relPath ? vscode.Uri.joinPath(folder.uri, ...relPath.split("/")) : folder.uri;
 
@@ -206,9 +204,9 @@ async function newApp(hint?: vscode.Uri): Promise<void> {
   }
   const appName = newName.trim();
 
-  const refEntity = config.referenceEntity ?? guessSingular(refName);
+  const refEntity = referenceEntity(refDir, config);
   let newEntity: string | undefined;
-  if (splitWords(refEntity).join("_") !== refName) {
+  if (refEntity) {
     newEntity = await vscode.window.showInputBox({
       title: "Singular name",
       prompt: `Inside ${refName}, "${refEntity}" (Order, order_id, OrderSerializer…) will be renamed to:`,
@@ -220,8 +218,8 @@ async function newApp(hint?: vscode.Uri): Promise<void> {
     }
   }
 
-  const pairs = buildRenamePairs(refName, appName, newEntity ? refEntity : undefined, newEntity?.trim());
-  const renamer = createRenamer(pairs);
+  const renamer = newAppRenamer(refDir, appName, config, newEntity?.trim());
+  const pairs = renamer.pairs;
   const targetDir = join(parent, appName);
 
   const tree = await vscode.window.withProgress(
@@ -231,34 +229,16 @@ async function newApp(hint?: vscode.Uri): Promise<void> {
   const plan = planFiles(tree.files, renamer, config.exclude);
   plan.skipped.push(...tree.skipped);
 
-  const notes: string[] = [];
-  const editsByFile = new Map<string, { text: string; edits: RegistrationEdit[] }>();
-  const collect = async (files: string[], planner: typeof planSettingsRegistration): Promise<void> => {
-    for (const f of files) {
-      if (f.startsWith(`${refDir}/`)) {
-        continue;
-      }
-      const text = await readText(uriOf(folder, f));
-      const r = planner(text, refDir, renamer, f);
-      notes.push(...r.notes);
-      if (r.edits.length > 0) {
-        const entry = editsByFile.get(f) ?? { text, edits: [] };
-        entry.edits.push(...r.edits);
-        editsByFile.set(f, entry);
-      }
-    }
-  };
-  if (config.registerInSettings !== false) {
-    const notesBefore = notes.length;
-    await collect(await findProjectFiles(folder, SETTINGS_GLOB), planSettingsRegistration);
-    if (editsByFile.size === 0 && notes.length === notesBefore) {
-      notes.push(`Add "${targetDir.replace(/\//g, ".")}" to INSTALLED_APPS manually (reference entry not found).`);
-    }
-  }
-  if (config.registerInUrls !== false) {
-    await collect(await findProjectFiles(folder, "**/urls.py"), planUrlsRegistration);
-  }
-  const registrations = [...editsByFile.values()].flatMap((e) => e.edits.map((x) => x.description));
+  const readAll = (paths: string[]): Promise<FileText[]> =>
+    Promise.all(paths.map(async (p) => ({ path: p, text: await readText(uriOf(folder, p)) })));
+  const { byFile: editsByFile, notes, descriptions: registrations } = planRegistrations(
+    await readAll(await findProjectFiles(folder, SETTINGS_GLOB)),
+    await readAll(await findProjectFiles(folder, "**/urls.py")),
+    refDir,
+    targetDir,
+    renamer,
+    config
+  );
 
   const preview = await vscode.workspace.openTextDocument({
     language: "markdown",
@@ -354,23 +334,76 @@ async function checkApps(): Promise<void> {
   if (!refDir) {
     return;
   }
-  const refName = baseOf(refDir);
-  const refEntity = config.referenceEntity ?? guessSingular(refName);
-  const refFiles = (await readTree(folder, refDir, false)).files.map((f) => f.relPath);
+  const listing = async (dir: string): Promise<string[]> => (await readTree(folder, dir, false)).files.map((f) => f.relPath);
+  const refFiles = await listing(refDir);
   const settingsTexts = await Promise.all((await findProjectFiles(folder, SETTINGS_GLOB)).map((f) => readText(uriOf(folder, f))));
-
-  const results: AppConformance[] = [];
-  for (const dir of await discoverAppDirs(folder)) {
-    if (dir === refDir || dir.startsWith(`${refDir}/`)) {
-      continue;
-    }
-    const name = baseOf(dir);
-    const renamer = createRenamer(buildRenamePairs(refName, name, refEntity, guessSingular(name)));
-    const expected = expectedFiles(refFiles, renamer, config.requiredFiles, config.exclude);
-    const actual = new Set((await readTree(folder, dir, false)).files.map((f) => f.relPath));
-    results.push({ dir, missing: missingFiles(expected, actual), registered: isRegistered(settingsTexts, dir) });
-  }
+  const apps = await Promise.all((await discoverAppDirs(folder)).map(async (dir) => ({ dir, files: new Set(await listing(dir)) })));
+  const results = checkConformance(refDir, refFiles, apps, settingsTexts, config);
   const source = config.requiredFiles ? `\`requiredFiles\` in ${CONFIG_FILE}` : "the reference app's Python files";
   const doc = await vscode.workspace.openTextDocument({ language: "markdown", content: formatConformanceReport(refDir, source, results) });
   await vscode.window.showTextDocument(doc, { preview: true });
+}
+
+/**
+ * Copies the CLI and the agent skill into the project so Claude Code, Codex and
+ * Copilot can create apps from the reference without VS Code.
+ */
+async function installAgentKit(context: vscode.ExtensionContext): Promise<void> {
+  const folder = await pickFolder();
+  if (!folder) {
+    return;
+  }
+  const config = await loadConfig(folder);
+  if (!config.referenceApp) {
+    const pick = await vscode.window.showWarningMessage(
+      "Agents need a reference app. Set one now?",
+      { modal: true, detail: `Without "referenceApp" in ${CONFIG_FILE}, the CLI stops and asks for --reference.` },
+      "Set Reference App"
+    );
+    if (pick === "Set Reference App") {
+      await setReference();
+    }
+  }
+
+  const outUri = vscode.Uri.joinPath(context.extensionUri, "out");
+  const sources: { from: vscode.Uri; to: string }[] = [{ from: vscode.Uri.joinPath(outUri, "cli.js"), to: join(AGENT_TOOL_DIR, "cli.js") }];
+  for (const [name, type] of await vscode.workspace.fs.readDirectory(vscode.Uri.joinPath(outUri, "scaffold"))) {
+    if (type === vscode.FileType.File && name.endsWith(".js")) {
+      sources.push({ from: vscode.Uri.joinPath(outUri, "scaffold", name), to: join(AGENT_TOOL_DIR, `scaffold/${name}`) });
+    }
+  }
+  const skill = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(context.extensionUri, "agent-kit", "SKILL.md"));
+  const skillRoots = vscode.workspace.getConfiguration("djangoScaffolder").get<string[]>("agentSkillRoots") ?? DEFAULT_SKILL_ROOTS;
+  const skillTargets = skillRoots.filter(isSafeRelativePath).map((r) => join(r, `${SKILL_NAME}/SKILL.md`));
+
+  const targets = [...sources.map((s) => s.to), join(AGENT_TOOL_DIR, "package.json"), ...skillTargets];
+  const existing: string[] = [];
+  for (const t of targets) {
+    if (await exists(uriOf(folder, t))) {
+      existing.push(t);
+    }
+  }
+  const choice = await vscode.window.showInformationMessage(
+    "Install the agent kit into this project?",
+    {
+      modal: true,
+      detail: `Writes the CLI to ${AGENT_TOOL_DIR}/ and the "${SKILL_NAME}" skill to: ${skillRoots.join(", ")}.` +
+        (existing.length > 0 ? `\n\nOverwrites ${existing.length} existing file(s) from an earlier install.` : ""),
+    },
+    "Install"
+  );
+  if (choice !== "Install") {
+    return;
+  }
+  for (const s of sources) {
+    await vscode.workspace.fs.writeFile(uriOf(folder, s.to), await vscode.workspace.fs.readFile(s.from));
+  }
+  // Keeps the CLI CommonJS even if the project's own package.json says "type": "module".
+  await vscode.workspace.fs.writeFile(uriOf(folder, join(AGENT_TOOL_DIR, "package.json")), new TextEncoder().encode('{\n  "private": true,\n  "type": "commonjs"\n}\n'));
+  for (const t of skillTargets) {
+    await vscode.workspace.fs.writeFile(uriOf(folder, t), skill);
+  }
+  void vscode.window.showInformationMessage(
+    `Agent kit installed. Commit ${AGENT_TOOL_DIR}/, ${CONFIG_FILE} and the skill folders so every agent (local or cloud) can use them.`
+  );
 }
