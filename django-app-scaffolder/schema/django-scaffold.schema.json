@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Django App Scaffolder settings",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "referenceApp": {
+      "type": "string",
+      "description": "Workspace-relative folder of the approved reference app, e.g. \"apps/orders\"."
+    },
+    "referenceEntity": {
+      "type": "string",
+      "description": "Singular entity name used in the reference app, e.g. \"Order\". Guessed from the app name when omitted."
+    },
+    "exclude": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Globs relative to the reference app that are never copied (migrations and __pycache__ are always skipped)."
+    },
+    "requiredFiles": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Files every app must have, checked by \"Check Apps Against Reference\". Defaults to the reference app's Python files."
+    },
+    "registerInSettings": {
+      "type": "boolean",
+      "default": true,
+      "description": "Add the new app next to the reference app in INSTALLED_APPS-style lists."
+    },
+    "registerInUrls": {
+      "type": "boolean",
+      "default": true,
+      "description": "Duplicate the reference app's include() entry in URLconfs."
+    }
+  }
+}
