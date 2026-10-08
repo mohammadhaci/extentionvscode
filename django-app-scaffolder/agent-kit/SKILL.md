@@ -43,6 +43,7 @@ The CLI is `node .django-scaffold/tool/cli.js`. It needs only Node, and it never
    python manage.py check
    python manage.py test <app_name>        # or the project's test runner
    node .django-scaffold/tool/cli.js check
+   node .migrations-guard/tool/cli.js check   # if Migrations Guard is installed
    ```
    - `check` exits with 1 and names the app when files from the template are missing or the app is not registered.
    - Fix every issue it names for the new app before you finish.

@@ -1,0 +1,71 @@
+{
+  "name": "migrations-guard",
+  "displayName": "Migrations Guard",
+  "description": "Static safety checks for Django migrations: data loss, NOT NULL traps, edited or conflicting migrations, irreversible data migrations. For VS Code, coding agents and CI.",
+  "version": "0.1.0",
+  "publisher": "migrations-guard",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/example/migrations-guard"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "keywords": [
+    "django",
+    "migrations",
+    "database",
+    "agents",
+    "ci"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/migrations/0001_*.py",
+    "onCommand:migrations-guard.check",
+    "onCommand:migrations-guard.installTool"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "migrations-guard.check",
+        "title": "Migrations Guard: Check Now"
+      },
+      {
+        "command": "migrations-guard.installTool",
+        "title": "Migrations Guard: Install CLI + Skill into Project"
+      }
+    ],
+    "configuration": {
+      "title": "Migrations Guard",
+      "properties": {
+        "migrationsGuard.base": {
+          "type": "string",
+          "default": "HEAD",
+          "description": "Git ref to compare against. \"HEAD\" checks uncommitted and untracked migrations; \"origin/main\" checks everything the branch adds."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "npm run compile && node --test \"out/test/**/*.test.js\"",
+    "lint": "eslint src",
+    "vscode:prepublish": "npm run compile",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^8.7.0",
+    "@typescript-eslint/parser": "^8.7.0",
+    "@vscode/vsce": "^4.0.0",
+    "eslint": "^9.12.0",
+    "typescript": "^5.5.4"
+  }
+}
