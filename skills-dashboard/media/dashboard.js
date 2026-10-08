@@ -226,7 +226,7 @@
     var box = el("div", "import");
     box.appendChild(el("div", "section-head", "Import from GitHub"));
     var hint = el("div", "hint",
-      "Paste a repository folder URL (…/tree/BRANCH/path/to/skill) or a SKILL.md URL (blob / raw). Files are fetched read-only; nothing is executed. Review the preview, then install.");
+      "Paste a repository URL (accepted when SKILL.md is at the repository root), a skill folder URL (…/tree/BRANCH/path/to/skill), or a SKILL.md URL (blob / raw). Files are fetched read-only; nothing is executed. Review the preview, then install.");
     box.appendChild(hint);
     var row = el("div", "import-row");
     var input = document.createElement("input");

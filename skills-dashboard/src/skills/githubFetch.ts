@@ -2,7 +2,7 @@
  * GitHub skill fetching with injectable transport (no `vscode` import, so
  * `fetchSkillFromGitHub` is unit-testable with a mocked FetchFn).
  */
-import { parseGitHubSkillUrl, toApiTreeUrl, toRawUrl, ParsedSkillUrl } from "./githubUrl";
+import { isValidGitRef, parseGitHubSkillUrl, toApiRepoUrl, toApiTreeUrl, toRawUrl, ParsedSkillUrl } from "./githubUrl";
 import { selectImportFiles } from "./githubTree";
 import { MAX_SKILL_MD_BYTES } from "./skillMetadata";
 
@@ -109,15 +109,62 @@ async function fetchWithTimeout(
   }
 }
 
+/**
+ * Resolve the repository default branch through the GitHub Repos API.
+ * Bounded by the same per-request timeout as all other GitHub requests.
+ */
+async function resolveDefaultBranch(
+  fetchFn: FetchFn,
+  owner: string,
+  repo: string,
+  timeout: number,
+  timedOut: string
+): Promise<string> {
+  let res: Awaited<ReturnType<FetchFn>>;
+  try {
+    res = await fetchWithTimeout(fetchFn, toApiRepoUrl(owner, repo), { headers: { Accept: "application/vnd.github+json", "User-Agent": "skills-dashboard-vscode" } }, timeout);
+  } catch (e) {
+    throw new Error(`Network error contacting GitHub: ${errorMessage(e)}`);
+  }
+  if (!res.ok) {
+    throw githubError(res.status, res.headers, await withTimeout(res.text(), timeout, timedOut).catch(() => ""));
+  }
+  let body: unknown;
+  try {
+    body = await withTimeout(res.json(), timeout, timedOut);
+  } catch (e) {
+    throw new Error(`Network error contacting GitHub: ${errorMessage(e)}`);
+  }
+  const branch = (body as { default_branch?: unknown } | null)?.default_branch;
+  if (!isValidGitRef(branch)) {
+    throw new Error(`GitHub did not return a usable default branch for ${owner}/${repo}.`);
+  }
+  return branch;
+}
+
 /** Fetch all files under the skill folder (bounded, traversal-safe, SKILL.md required). */
 export async function fetchSkillFromGitHub(
   url: string,
   fetchFn: FetchFn = defaultFetch,
   timeoutMs: number = DEFAULT_REQUEST_TIMEOUT_MS
 ): Promise<FetchedSkill> {
-  const parsed = parseGitHubSkillUrl(url);
+  let parsed = parseGitHubSkillUrl(url);
   const timeout = resolveTimeout(timeoutMs);
   const timedOut = `GitHub request timed out after ${timeout} ms.`;
+
+  // 0) Bare repository URLs omit the branch: resolve the default branch first.
+  if (parsed.ref === "") {
+    try {
+      const branch = await resolveDefaultBranch(fetchFn, parsed.owner, parsed.repo, timeout, timedOut);
+      parsed = { ...parsed, ref: branch };
+    } catch (e) {
+      const msg = errorMessage(e);
+      if (msg.startsWith("GitHub") || msg.startsWith("Not found") || msg.startsWith("Refusing import")) {
+        throw e;
+      }
+      throw new Error(`Network error contacting GitHub: ${msg}`);
+    }
+  }
 
   // 1) Single bounded Trees API request, then mode-aware selection.
   let treeJson: unknown;
@@ -146,7 +193,8 @@ export async function fetchSkillFromGitHub(
   const files: FetchedSkillFile[] = [];
   let total = 0;
   for (const rel of wanted) {
-    const rawUrl = toRawUrl(parsed, `${parsed.skillPath}/${rel}`);
+    const repoPath = parsed.skillPath === "" ? rel : `${parsed.skillPath}/${rel}`;
+    const rawUrl = toRawUrl(parsed, repoPath);
     let res;
     try {
       res = await fetchWithTimeout(fetchFn, rawUrl, { headers: { "User-Agent": "skills-dashboard-vscode" } }, timeout);
