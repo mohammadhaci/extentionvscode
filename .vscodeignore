@@ -8,3 +8,10 @@ out/test/**
 out/**/*.map
 **/*.tsbuildinfo
 node_modules/**
+# Sibling extensions in this repository ship their own VSIX files.
+skills-dashboard/**
+django-app-scaffolder/**
+agent-context-sync/**
+migrations-guard/**
+agent-change-report/**
+**/*.vsix

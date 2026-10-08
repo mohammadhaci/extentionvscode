@@ -60,36 +60,50 @@ function splitTopLevelArgs(inner: string): string[] {
   return args;
 }
 
-/** Extract the inner text of the first path()/re_path()/url() call in a statement. */
-function callInner(stmt: string): string | undefined {
-  const m = stmt.match(URL_CALL_START_RE);
-  if (!m || m.index === undefined) {
-    return undefined;
-  }
-  let i = stmt.indexOf("(", m.index);
-  let depth = 0;
-  let quote: string | null = null;
-  const start = i;
-  for (; i < stmt.length; i++) {
-    const ch = stmt[i];
-    if (quote) {
-      if (ch === quote && stmt[i - 1] !== "\\") {
-        quote = null;
-      }
-      continue;
+/**
+ * Inner texts of every top-level path()/re_path()/url() call in a statement,
+ * e.g. both calls of `urlpatterns = [path("a/", x), path("b/", y)]`. Calls
+ * nested inside another call (such as `include([path(...)])`) are skipped.
+ */
+function callInners(stmt: string): string[] {
+  const inners: string[] = [];
+  let from = 0;
+  for (;;) {
+    const m = URL_CALL_START_RE.exec(stmt.slice(from));
+    if (!m) {
+      return inners;
     }
-    if (ch === '"' || ch === "'") {
-      quote = ch;
-    } else if (ch === "(") {
-      depth++;
-    } else if (ch === ")") {
-      depth--;
-      if (depth === 0) {
-        return stmt.slice(start + 1, i);
+    let i = stmt.indexOf("(", from + m.index);
+    let depth = 0;
+    let quote: string | null = null;
+    const start = i;
+    let end = -1;
+    for (; i < stmt.length; i++) {
+      const ch = stmt[i];
+      if (quote) {
+        if (ch === quote && stmt[i - 1] !== "\\") {
+          quote = null;
+        }
+        continue;
+      }
+      if (ch === '"' || ch === "'") {
+        quote = ch;
+      } else if (ch === "(") {
+        depth++;
+      } else if (ch === ")") {
+        depth--;
+        if (depth === 0) {
+          end = i;
+          break;
+        }
       }
     }
+    if (end === -1) {
+      return inners;
+    }
+    inners.push(stmt.slice(start + 1, end));
+    from = end + 1;
   }
-  return undefined;
 }
 
 /**
@@ -131,30 +145,29 @@ export function parseUrls(text: string): UrlPattern[] {
 
   const out: UrlPattern[] = [];
   for (const { text: stmt, line } of logical) {
-    const inner = callInner(stmt);
-    if (inner === undefined) {
-      continue;
-    }
-    const args = splitTopLevelArgs(inner);
-    if (args.length < 2) {
-      continue;
-    }
-    const route = unquote(args[0].trim().replace(/^r(?=["'])/, ""));
-    const viewRaw = args[1].trim();
-    const nameM = stmt.match(NAME_RE);
-    const name = nameM ? nameM[1] : undefined;
-    const inc = viewRaw.match(INCLUDE_RE);
-    if (inc) {
-      out.push({
-        route,
-        viewRef: viewRaw,
-        name,
-        line,
-        isInclude: true,
-        includeModule: inc[1] ?? inc[2]
-      });
-    } else {
-      out.push({ route, viewRef: viewRaw, name, line, isInclude: false });
+    for (const inner of callInners(stmt)) {
+      const args = splitTopLevelArgs(inner);
+      if (args.length < 2) {
+        continue;
+      }
+      const route = unquote(args[0].trim().replace(/^r(?=["'])/, ""));
+      const viewRaw = args[1].trim();
+      // Read the name from this call only, so each pattern of a shared line keeps its own.
+      const nameM = inner.match(NAME_RE);
+      const name = nameM ? nameM[1] : undefined;
+      const inc = viewRaw.match(INCLUDE_RE);
+      if (inc) {
+        out.push({
+          route,
+          viewRef: viewRaw,
+          name,
+          line,
+          isInclude: true,
+          includeModule: inc[1] ?? inc[2]
+        });
+      } else {
+        out.push({ route, viewRef: viewRaw, name, line, isInclude: false });
+      }
     }
   }
   return out;

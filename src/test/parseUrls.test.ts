@@ -46,6 +46,16 @@ describe("parseUrls", () => {
     assert.ok(patterns.some((p) => p.name === "multiline"));
   });
 
+  it("reads every path() of a one-line list, each with its own name", () => {
+    const patterns = parseUrls('urlpatterns = [path("", views.a, name="list"), path("<int:pk>/", views.b, name="detail")]\n');
+    assert.deepEqual(patterns.map((p) => [p.route, p.name]), [["", "list"], ["<int:pk>/", "detail"]]);
+  });
+
+  it("does not read path() calls nested inside include([...]) as top-level", () => {
+    const patterns = parseUrls('urlpatterns = [path("api/", include([path("x/", views.x)])), path("y/", views.y)]\n');
+    assert.deepEqual(patterns.map((p) => p.route), ["api/", "y/"]);
+  });
+
   it("normalizes view refs", () => {
     assert.equal(normalizeViewRef("views.PostListView.as_view()"), "PostListView");
     assert.equal(normalizeViewRef("views.post_list"), "post_list");
