@@ -1,0 +1,141 @@
+/* Django Visual Map — compact developer-tool styling.
+   Works in both the full panel and the sidebar; respects VS Code theme vars. */
+:root {
+  --dvm-app: #8b5cf6;
+  --dvm-url: #0ea5e9;
+  --dvm-view: #f59e0b;
+  --dvm-model: #22c55e;
+  --dvm-template: #ec4899;
+  --dvm-edge: #6b7280;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--vscode-font-family, -apple-system, "Segoe UI", sans-serif);
+  font-size: 12px;
+  color: var(--vscode-foreground);
+  background: var(--vscode-editor-background);
+}
+
+/* ---------- layout ---------- */
+.dvm-root { display: flex; flex-direction: column; height: 100vh; }
+.dvm-toolbar {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  background: var(--vscode-sideBar-background);
+}
+.dvm-toolbar .spacer { flex: 1; }
+.dvm-main { display: flex; flex: 1; min-height: 0; }
+.dvm-canvas-wrap { flex: 1; position: relative; min-width: 0; }
+.dvm-canvas-wrap svg { width: 100%; height: 100%; display: block; touch-action: none; }
+.dvm-side {
+  width: 280px; min-width: 240px; max-width: 340px;
+  border-left: 1px solid var(--vscode-panel-border);
+  background: var(--vscode-sideBar-background);
+  overflow-y: auto; padding: 12px;
+}
+@media (max-width: 760px) {
+  .dvm-main { flex-direction: column; }
+  .dvm-side { width: 100%; max-width: none; border-left: none; border-top: 1px solid var(--vscode-panel-border); max-height: 40vh; }
+}
+
+/* ---------- controls ---------- */
+.dvm-search {
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 4px; padding: 4px 8px; min-width: 180px;
+}
+.dvm-search:focus { outline: 1px solid var(--vscode-focusBorder); }
+.dvm-btn {
+  background: var(--vscode-button-secondaryBackground, transparent);
+  color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px; padding: 4px 10px; cursor: pointer; font-size: 12px;
+}
+.dvm-btn:hover { background: var(--vscode-list-hoverBackground); }
+.dvm-btn.primary {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border-color: transparent;
+}
+.dvm-btn.primary:hover { background: var(--vscode-button-hoverBackground); }
+.dvm-btn:focus-visible, .dvm-search:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 1px; }
+.dvm-filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.dvm-chip { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; padding: 2px 6px; border-radius: 10px; border: 1px solid transparent; }
+.dvm-chip:hover { background: var(--vscode-list-hoverBackground); }
+.dvm-chip[aria-pressed="false"] { opacity: 0.45; }
+.dvm-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.dvm-dot.bg-app { background: var(--dvm-app); }
+.dvm-dot.bg-url { background: var(--dvm-url); }
+.dvm-dot.bg-view { background: var(--dvm-view); }
+.dvm-dot.bg-model { background: var(--dvm-model); }
+.dvm-dot.bg-template { background: var(--dvm-template); }
+.dvm-select {
+  background: var(--vscode-input-background); color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, transparent); border-radius: 4px; padding: 3px 6px;
+}
+
+/* ---------- stats + legend ---------- */
+.dvm-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 6px 12px; border-bottom: 1px solid var(--vscode-panel-border); }
+.dvm-stat b { font-variant-numeric: tabular-nums; }
+.dvm-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 6px 12px; border-bottom: 1px solid var(--vscode-panel-border); color: var(--vscode-descriptionForeground); }
+.dvm-legend .edge-sample { display: inline-block; width: 22px; border-top: 2px solid var(--dvm-edge); vertical-align: middle; margin-right: 4px; }
+.dvm-legend .dashed { border-top-style: dashed; }
+.dvm-legend .dotted { border-top-style: dotted; }
+
+/* ---------- svg nodes ---------- */
+.dvm-node { cursor: pointer; }
+.dvm-node rect.body { stroke-width: 1.5; fill: var(--vscode-editor-background); }
+.dvm-node text { font-size: 11px; pointer-events: none; }
+.dvm-node .sub { font-size: 9.5px; }
+.dvm-node.dim { opacity: 0.18; }
+.dvm-node.hidden { display: none; }
+.dvm-node.selected rect.body { stroke: var(--vscode-focusBorder); stroke-width: 2.5; }
+.dvm-node:focus-visible { outline: none; }
+.dvm-node:focus-visible rect.body { stroke: var(--vscode-focusBorder); stroke-width: 2.5; }
+.dvm-node.neighbor rect.body { stroke-dasharray: 0; filter: brightness(1.15); }
+.dvm-edge { fill: none; stroke: var(--dvm-edge); stroke-width: 1.2; opacity: 0.75; }
+.dvm-edge.e-fk { stroke: #f97316; }
+.dvm-edge.e-o2o { stroke: #a855f7; }
+.dvm-edge.e-m2m { stroke: #ec4899; }
+.dvm-edge.uncertain { stroke-dasharray: 4 3; }
+.dvm-edge.rel-o2o { stroke-dasharray: 6 3; }
+.dvm-edge.rel-m2m { stroke-dasharray: 2 3; }
+.dvm-edge.dim { opacity: 0.08; }
+.dvm-edge.hidden { display: none; }
+.dvm-edge.highlight { stroke: var(--vscode-focusBorder); stroke-width: 2; opacity: 1; }
+.dvm-edge-label { font-size: 9px; fill: var(--vscode-descriptionForeground); }
+.dvm-col-title { font-size: 11px; font-weight: 600; fill: var(--vscode-descriptionForeground); }
+
+/* ---------- details ---------- */
+#details h2, .dvm-details h2 { font-size: 13px; margin: 0 0 4px; word-break: break-word; }
+.dvm-h3 { font-size: 12px; margin: 10px 0 4px; }
+.dvm-kind { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; border-radius: 3px; padding: 1px 6px; margin-bottom: 6px; color: #fff; }
+.dvm-kind.app { background: var(--dvm-app); } .dvm-kind.url { background: var(--dvm-url); }
+.dvm-kind.view { background: var(--dvm-view); } .dvm-kind.model { background: var(--dvm-model); }
+.dvm-kind.template { background: var(--dvm-template); }
+.dvm-kv { margin: 4px 0; word-break: break-word; }
+.dvm-kv code { font-family: var(--vscode-editor-font-family, monospace); }
+.dvm-badge { display: inline-block; font-size: 10px; border: 1px solid var(--vscode-panel-border); border-radius: 3px; padding: 0 5px; margin-left: 6px; color: var(--vscode-descriptionForeground); }
+.dvm-rel-list { list-style: none; margin: 6px 0; padding: 0; }
+.dvm-rel-list li { margin: 2px 0; }
+.dvm-rel-list button { background: none; border: none; color: var(--vscode-textLink-foreground); cursor: pointer; padding: 0; font-size: 12px; text-align: left; }
+.dvm-rel-list button:hover { text-decoration: underline; }
+.dvm-warn { border: 1px solid var(--vscode-inputValidation-warningBorder, #c09853); background: var(--vscode-inputValidation-warningBackground, transparent); border-radius: 4px; padding: 6px 8px; margin: 8px 0; }
+.dvm-empty, .dvm-error, .dvm-progress { padding: 32px 24px; max-width: 560px; margin: 0 auto; text-align: left; }
+.dvm-empty h1, .dvm-error h1 { font-size: 16px; }
+.dvm-empty ol { padding-left: 20px; }
+.dvm-hint { color: var(--vscode-descriptionForeground); }
+kbd { background: var(--vscode-keybindingLabel-background, #eee); border: 1px solid var(--vscode-panel-border); border-radius: 3px; padding: 0 4px; font-size: 11px; }
+
+/* ---------- sidebar ---------- */
+.dvm-sidebar { padding: 12px; }
+.dvm-sidebar h1 { font-size: 13px; margin: 0 0 8px; }
+.dvm-sidebar h1.dvm-h1-gap { margin-top: 10px; }
+.dvm-sidebar .row { display: flex; justify-content: space-between; padding: 2px 0; }
+.dvm-sidebar .actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }

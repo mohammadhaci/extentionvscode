@@ -1,0 +1,96 @@
+{
+  "name": "django-visual-map",
+  "displayName": "Django Visual Map",
+  "description": "Analyze a Django project and show a visual map of apps, URLs, views, models and relationships.",
+  "version": "0.1.0",
+  "publisher": "django-visual-map",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/example/django-visual-map"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "keywords": [
+    "django",
+    "python",
+    "visualization",
+    "map",
+    "urls",
+    "models"
+  ],
+  "activationEvents": [
+    "onCommand:django-visual-map.openMap",
+    "onView:django-visual-map.sidebar"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "django-visual-map.openMap",
+        "title": "Django Visual Map: Open Project Map"
+      },
+      {
+        "command": "django-visual-map.refresh",
+        "title": "Django Visual Map: Refresh Project Map"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "django-visual-map",
+          "title": "Django Map",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "django-visual-map": [
+        {
+          "id": "django-visual-map.sidebar",
+          "name": "Project Map",
+          "type": "webview"
+        }
+      ]
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "django-visual-map.openMap"
+        },
+        {
+          "command": "django-visual-map.refresh"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "django-visual-map.refresh",
+          "when": "view == django-visual-map.sidebar",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "npm run compile && node --test \"out/test/**/*.test.js\"",
+    "lint": "eslint src --ext .ts",
+    "vscode:prepublish": "npm run compile",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^8.7.0",
+    "@typescript-eslint/parser": "^8.7.0",
+    "@vscode/vsce": "^4.0.0",
+    "eslint": "^9.12.0",
+    "typescript": "^5.5.4"
+  }
+}
