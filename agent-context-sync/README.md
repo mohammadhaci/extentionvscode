@@ -53,6 +53,28 @@ The generated block itself tells agents to run `sync` after adding or removing a
 includes. The `django-new-app` skill from Django App Scaffolder runs it after creating an app.
 To enforce it, add `check` to CI.
 
+## CI guardrails workflow
+
+**Agent Context: Install CI Guardrails Workflow** (or `node .agent-context/tool/cli.js install-ci`)
+writes `.github/workflows/agent-guardrails.yml`. It runs on every pull request, and on pushes to
+`main`/`master`. Each check below runs only if its tool is installed in the project:
+
+| Step | Runs | Fails when |
+| --- | --- | --- |
+| Migrations Guard | `check --base origin/<PR base>` (or `check` on push) | unsafe, edited or conflicting migrations |
+| App structure | `django-scaffold check` | an app drifts from the reference app |
+| Agent instructions | `agent-context check` | `CLAUDE.md` / `AGENTS.md` / copilot instructions are stale |
+
+- All steps run even when an earlier one fails, so a single run shows every problem.
+- Results also go to the job summary on the PR.
+- The push trigger catches what no single PR can: two PRs that each add `0002` to the same app.
+- An optional, commented-out step runs `makemigrations --check --dry-run`. It needs your
+  project's requirements and settings, so it is left for you to adapt.
+- A customised copy is never replaced without `--force` (or a confirmation in VS Code).
+
+The template lives in `ci/agent-guardrails.yml`. The build embeds it in the CLI, and it is
+checked with actionlint and shellcheck.
+
 ## `.agent-context/config.json` (optional)
 
 ```json
@@ -93,3 +115,4 @@ Press F5 with **Run Agent Context Sync** (`.vscode/launch.json` in this folder).
 - الإضافة بتحطها بـ `CLAUDE.md` و`AGENTS.md` و`.github/copilot-instructions.md` مع خريطة محدّثة للمشروع: الأقسام، والـ models، والروابط، ومين بيعتمد على مين.
 - كل وكيل بيشوف نفس القواعد ونفس صورة المشروع.
 - أي قسم جديد بيظهر عندهم فوراً بعد `sync`. مهارة `django-new-app` بتشغّل `sync` لحالها، و`check` بيكشف إذا الملفات صارت قديمة.
+- **Install CI Guardrails Workflow** بيضيف ملف GitHub Actions بيشغّل كل الفحوصات على كل PR. هيك ولا وكيل بيقدر يدمج شي بيكسر القواعد.

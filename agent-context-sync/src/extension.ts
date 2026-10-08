@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import { RULES_FILE, TOOL_DIR } from "./context/config";
+import { CI_WORKFLOW_PATH, installCiWorkflow } from "./context/ci";
 import { initRules, syncProject } from "./context/sync";
 
 let output: vscode.OutputChannel | undefined;
@@ -14,7 +15,8 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand("agent-context-sync.sync", () => run(() => syncCommand())),
     vscode.commands.registerCommand("agent-context-sync.openRules", () => run(() => openRules())),
-    vscode.commands.registerCommand("agent-context-sync.installTool", () => run(() => installTool(context)))
+    vscode.commands.registerCommand("agent-context-sync.installTool", () => run(() => installTool(context))),
+    vscode.commands.registerCommand("agent-context-sync.installCi", () => run(() => installCi()))
   );
   setUpAutoSync(context);
 }
@@ -129,6 +131,32 @@ async function installTool(context: vscode.ExtensionContext): Promise<void> {
       (problems.length > 0 ? ` Problems: ${problems.join("; ")}` : "")
   );
   await vscode.window.showTextDocument(vscode.Uri.joinPath(folder.uri, ...RULES_FILE.split("/")));
+}
+
+/** Writes the GitHub Actions workflow that runs every installed agent tool's check. */
+async function installCi(): Promise<void> {
+  const folder = await pickFolder();
+  if (!folder) {
+    return;
+  }
+  let status = installCiWorkflow(folder.uri.fsPath);
+  if (status === "exists") {
+    const choice = await vscode.window.showWarningMessage(
+      `${CI_WORKFLOW_PATH} already exists and differs from the template.`,
+      { modal: true, detail: "It may have been customised. Replace it with the current template?" },
+      "Replace"
+    );
+    if (choice !== "Replace") {
+      return;
+    }
+    status = installCiWorkflow(folder.uri.fsPath, true);
+  }
+  await vscode.window.showTextDocument(vscode.Uri.joinPath(folder.uri, ...CI_WORKFLOW_PATH.split("/")));
+  void vscode.window.showInformationMessage(
+    status === "unchanged"
+      ? `${CI_WORKFLOW_PATH} is already up to date.`
+      : `${CI_WORKFLOW_PATH} ${status}. Commit it: pull requests then run Migrations Guard, the app structure check and the agent-instructions check (whichever are installed).`
+  );
 }
 
 /**

@@ -98,3 +98,26 @@ describe("cli", () => {
     assert.equal(findProjectRoot(path.join(root, "apps/orders")), root);
   });
 });
+
+describe("install-ci", () => {
+  const wf = ".github/workflows/agent-guardrails.yml";
+
+  it("writes the workflow, is idempotent, and protects customised copies", () => {
+    const first = run("install-ci");
+    assert.equal(first.code, 0, first.err);
+    assert.match(first.out, /created\s+\.github\/workflows\/agent-guardrails\.yml/);
+    assert.match(read(wf), /name: Agent guardrails/);
+    assert.match(run("install-ci").out, /unchanged/);
+    write(wf, read(wf) + "# custom\n");
+    const refused = run("install-ci");
+    assert.equal(refused.code, 1);
+    assert.match(refused.err, /--force/);
+    assert.match(read(wf), /# custom/);
+    assert.match(run("install-ci", "--force").out, /updated/);
+    assert.ok(!read(wf).includes("# custom"));
+  });
+
+  it("only accepts --force with install-ci", () => {
+    assert.equal(run("sync", "--force").code, 2);
+  });
+});

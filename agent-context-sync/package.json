@@ -28,7 +28,8 @@
     "workspaceContains:.agent-context/rules.md",
     "onCommand:agent-context-sync.sync",
     "onCommand:agent-context-sync.openRules",
-    "onCommand:agent-context-sync.installTool"
+    "onCommand:agent-context-sync.installTool",
+    "onCommand:agent-context-sync.installCi"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -44,6 +45,10 @@
       {
         "command": "agent-context-sync.installTool",
         "title": "Agent Context: Install CLI into Project"
+      },
+      {
+        "command": "agent-context-sync.installCi",
+        "title": "Agent Context: Install CI Guardrails Workflow"
       }
     ],
     "configuration": {

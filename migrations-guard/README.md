@@ -50,7 +50,9 @@ An `allow` comment without a reason does not silence anything. Allowed findings 
 2. Run **Migrations Guard: Install CLI + Skill into Project**. It writes:
    - `.migrations-guard/tool/`: the CLI, Node only
    - the `django-migrations-guard` skill into `.claude/skills`, `.agents/skills` and `.github/skills`
-3. Commit them, and add this to CI:
+3. Commit them, and run the guard in CI. The easiest way is Agent Context Sync's
+   **Install CI Guardrails Workflow**, which runs this and the other tools' checks on every PR.
+   To wire it up yourself, use:
    ```sh
    node .migrations-guard/tool/cli.js check --base origin/main
    ```

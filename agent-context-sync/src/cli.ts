@@ -2,6 +2,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { CONFIG_FILE, RULES_FILE, SCAFFOLD_CONFIG, TOOL_DIR } from "./context/config";
+import { CI_WORKFLOW_PATH, installCiWorkflow } from "./context/ci";
 import { initRules, syncProject, TargetResult } from "./context/sync";
 
 export interface Io {
@@ -20,6 +21,10 @@ Usage (run from anywhere inside the project):
   node ${TOOL_DIR}/cli.js check [--json]   Exit 1 when any target is out of date (for CI / agents)
   node ${TOOL_DIR}/cli.js print            Print the generated block
   node ${TOOL_DIR}/cli.js init             Create ${RULES_FILE} from a starter template
+  node ${TOOL_DIR}/cli.js install-ci [--force]
+                                           Write ${CI_WORKFLOW_PATH}, a GitHub Actions workflow
+                                           running every installed agent tool's check on PRs
+                                           (--force replaces a customised copy)
 
 Only the text between <!-- agent-context:start --> and <!-- agent-context:end -->
 is ever rewritten; everything else in the target files is preserved.
@@ -53,14 +58,15 @@ function report(results: readonly TargetResult[], io: Io): void {
 export function main(argv: readonly string[], io: Io): number {
   const args = argv.filter((a) => !a.startsWith("--"));
   const json = argv.includes("--json");
-  const unknown = argv.filter((a) => a.startsWith("--") && a !== "--json" && a !== "--help");
+  const force = argv.includes("--force");
+  const unknown = argv.filter((a) => a.startsWith("--") && !["--json", "--help", "--force"].includes(a));
   const cmd = args[0];
   if (argv.includes("--help") || cmd === "help") {
     io.out(USAGE);
     return 0;
   }
-  if (!cmd || args.length > 1 || unknown.length > 0) {
-    io.err(unknown.length > 0 ? `error: unknown option ${unknown[0]}` : USAGE);
+  if (!cmd || args.length > 1 || unknown.length > 0 || (force && cmd !== "install-ci")) {
+    io.err(unknown.length > 0 ? `error: unknown option ${unknown[0]}` : force && cmd ? "error: --force only applies to install-ci" : USAGE);
     return 2;
   }
   try {
@@ -69,6 +75,18 @@ export function main(argv: readonly string[], io: Io): number {
       case "init": {
         const created = initRules(root);
         io.out(created ? `Created ${RULES_FILE}. Fill in the TODOs, then run sync.` : `${RULES_FILE} already exists.`);
+        return 0;
+      }
+      case "install-ci": {
+        const status = installCiWorkflow(root, force);
+        if (status === "exists") {
+          io.err(`${CI_WORKFLOW_PATH} exists and differs from the template (maybe customised). Re-run with --force to replace it.`);
+          return 1;
+        }
+        io.out(`${status.padEnd(9)} ${CI_WORKFLOW_PATH}`);
+        if (status !== "unchanged") {
+          io.out("Commit it; the checks then run on every pull request.");
+        }
         return 0;
       }
       case "print": {
