@@ -1,0 +1,113 @@
+{
+  "name": "skills-dashboard",
+  "displayName": "Skills Dashboard",
+  "description": "Browse, copy, remove, and import project-local AI agent skills (SKILL.md folders).",
+  "version": "0.1.0",
+  "publisher": "skills-dashboard",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/example/skills-dashboard"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "skills",
+    "agents",
+    "SKILL.md"
+  ],
+  "activationEvents": [
+    "onCommand:skills-dashboard.open",
+    "onView:skills-dashboard.main"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "skills-dashboard.open",
+        "title": "Skills Dashboard: Open"
+      },
+      {
+        "command": "skills-dashboard.refresh",
+        "title": "Skills Dashboard: Refresh"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "skills-dashboard",
+          "title": "Skills",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "skills-dashboard": [
+        {
+          "id": "skills-dashboard.main",
+          "name": "Skills Dashboard",
+          "type": "webview"
+        }
+      ]
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "skills-dashboard.open"
+        },
+        {
+          "command": "skills-dashboard.refresh"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "skills-dashboard.refresh",
+          "when": "view == skills-dashboard.main",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Skills Dashboard",
+      "properties": {
+        "skillsDashboard.skillRoots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            ".claude/skills",
+            ".agents/skills",
+            ".github/skills",
+            ".cursor/skills",
+            ".codex/skills",
+            ".opencode/skills",
+            ".gemini/skills"
+          ],
+          "description": "Workspace-relative directories scanned for immediate child skill folders containing SKILL.md. Custom entries must stay within the workspace folder."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "npm run compile && node --test \"out/test/**/*.test.js\"",
+    "lint": "eslint src",
+    "vscode:prepublish": "npm run compile",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^8.7.0",
+    "@typescript-eslint/parser": "^8.7.0",
+    "@vscode/vsce": "^4.0.0",
+    "eslint": "^9.12.0",
+    "typescript": "^5.5.4"
+  }
+}
