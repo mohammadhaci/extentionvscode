@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Agent Context Sync settings",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "targets": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "\\.md$" },
+      "minItems": 1,
+      "default": ["CLAUDE.md", "AGENTS.md", ".github/copilot-instructions.md"],
+      "description": "Workspace-relative instruction files that receive the generated block."
+    },
+    "projectMap": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include the auto-generated Django project map."
+    },
+    "maxModelsPerApp": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 8,
+      "description": "Models listed per app in the project map before \"+N more\"."
+    }
+  }
+}

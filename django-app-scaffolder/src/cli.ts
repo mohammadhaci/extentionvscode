@@ -328,6 +328,15 @@ export function main(argv: readonly string[], io: Io): number {
 }
 
 if (require.main === module) {
+  // Output piped into `head` and similar closes early; that is not a failure.
+  for (const stream of [process.stdout, process.stderr]) {
+    stream.on("error", (err: NodeJS.ErrnoException) => {
+      if (err.code === "EPIPE") {
+        process.exit(process.exitCode ?? 0);
+      }
+      throw err;
+    });
+  }
   process.exitCode = main(process.argv.slice(2), {
     cwd: process.cwd(),
     out: (l) => process.stdout.write(l + "\n"),

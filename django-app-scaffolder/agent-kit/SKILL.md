@@ -46,6 +46,13 @@ The CLI is `node .django-scaffold/tool/cli.js`. It needs only Node, and it never
    ```
    - `check` exits with 1 and names the app when files from the template are missing or the app is not registered.
    - Fix every issue it names for the new app before you finish.
+7. **Refresh the agent instructions** if the project uses Agent Context Sync
+   (`.agent-context/tool/cli.js` exists):
+   ```sh
+   node .agent-context/tool/cli.js sync
+   ```
+   This adds the new app to the project map in `CLAUDE.md`, `AGENTS.md` and
+   `.github/copilot-instructions.md`. Commit those files with the app.
 
 ## Other commands
 
