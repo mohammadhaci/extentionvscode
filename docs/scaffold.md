@@ -43,12 +43,29 @@ Then run `python manage.py makemigrations <app>`.
   "exclude": ["fixtures/**", "tests/snapshots/**"],
   "requiredFiles": ["apps.py", "models.py", "services.py", "selectors.py", "tests/__init__.py"],
   "registerInSettings": true,
-  "registerInUrls": true
+  "registerInUrls": true,
+  "apps": ["apps/invoices"],
+  "checkAllApps": false
 }
 ```
 
 All keys are optional; VS Code validates the file with the bundled JSON schema.
 `referenceEntity` is guessed from the app name (`orders` → `order`) when omitted.
+
+## The structure check
+
+**Check Apps Against Reference** (and `scaffold check`, the CI step, and the Home card)
+works like this:
+
+- It covers the apps **created from the reference**. `new` adds each one to `apps`
+  automatically. Apps that existed before the studio are listed as not checked, unless
+  you set `"checkAllApps": true`.
+- An app must have the reference's **skeleton**, not its features:
+  - the standard Django modules the reference has (`models.py`, `views.py`, `urls.py`,
+    `forms.py`, `serializers.py`, `services.py`, `admin.py`, …)
+  - the `__init__.py` of each top-level package (`services/`, `tests/`, `migrations/`, …)
+  Feature files such as `services/change_reviews.py` are not required.
+- `requiredFiles` replaces the skeleton with your own list.
 
 ## Limits
 

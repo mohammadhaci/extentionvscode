@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { CONFIG_FILE, parseConfig, ScaffoldConfig, withReferenceApp } from "./config";
+import { CONFIG_FILE, parseConfig, ScaffoldConfig, withReferenceApp, withScaffoldedApp } from "./config";
 import { formatConformanceReport } from "./conformance";
 import { guessSingular, validateAppName } from "./names";
 import { planFiles, SourceFile } from "./plan";
@@ -289,6 +289,11 @@ async function newApp(hint?: vscode.Uri): Promise<void> {
   }
   await vscode.workspace.applyEdit(edit);
 
+  // Remember the app so the structure check covers it.
+  const configUri = uriOf(folder, CONFIG_FILE);
+  const configText = (await exists(configUri)) ? await readText(configUri) : undefined;
+  await vscode.workspace.fs.writeFile(configUri, new TextEncoder().encode(withScaffoldedApp(configText, targetDir)));
+
   const appsPy = plan.files.find((f) => f.targetRel === "apps.py") ?? plan.files[0];
   if (appsPy) {
     await vscode.window.showTextDocument(uriOf(folder, join(targetDir, appsPy.targetRel)), { preview: false });
@@ -333,9 +338,9 @@ async function checkApps(): Promise<void> {
   const refFiles = await listing(refDir);
   const settingsTexts = await Promise.all((await findProjectFiles(folder, SETTINGS_GLOB)).map((f) => readText(uriOf(folder, f))));
   const apps = await Promise.all((await discoverAppDirs(folder)).map(async (dir) => ({ dir, files: new Set(await listing(dir)) })));
-  const results = checkConformance(refDir, refFiles, apps, settingsTexts, config);
-  const source = config.requiredFiles ? `\`requiredFiles\` in ${CONFIG_FILE}` : "the reference app's Python files";
-  const doc = await vscode.workspace.openTextDocument({ language: "markdown", content: formatConformanceReport(refDir, source, results) });
+  const { results, skipped } = checkConformance(refDir, refFiles, apps, settingsTexts, config);
+  const source = config.requiredFiles ? `\`requiredFiles\` in ${CONFIG_FILE}` : "the reference app's skeleton (standard modules and packages)";
+  const doc = await vscode.workspace.openTextDocument({ language: "markdown", content: formatConformanceReport(refDir, source, results, skipped) });
   await vscode.window.showTextDocument(doc, { preview: true });
 }
 

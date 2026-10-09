@@ -90,16 +90,37 @@ describe("cli", () => {
     assert.match(fs.readFileSync(path.join(root, "apps/categories/models.py"), "utf8"), /class Category\(/);
   });
 
-  it("check fails for incomplete or unregistered apps", () => {
+  it("skips apps that existed before the studio unless checkAllApps is set", () => {
     run("reference", "apps/orders");
     write("apps/legacy/apps.py", "");
     const r = run("check", "--json");
-    assert.equal(r.code, 1);
-    const report = JSON.parse(r.out);
-    assert.equal(report.ok, false);
+    assert.equal(r.code, 0, r.out);
+    assert.deepEqual(JSON.parse(r.out).skipped, ["apps/legacy"]);
+    assert.match(run("check").out, /not checked: `apps\/legacy`/);
+
+    const cfg = path.join(root, ".agent-studio/scaffold.json");
+    fs.writeFileSync(cfg, JSON.stringify({ ...JSON.parse(fs.readFileSync(cfg, "utf8")), checkAllApps: true }));
+    const all = run("check", "--json");
+    assert.equal(all.code, 1);
+    const report = JSON.parse(all.out);
     assert.equal(report.apps[0].dir, "apps/legacy");
     assert.equal(report.apps[0].registered, false);
     assert.ok(report.apps[0].missing.includes("models.py"));
+  });
+
+  it("records created apps and holds them to the skeleton, not the reference's features", () => {
+    run("reference", "apps/orders");
+    write("apps/orders/collaboration_views.py", "def board(request):\n    pass\n");
+    assert.equal(run("new", "invoices", "--entity", "Invoice").code, 0);
+    assert.deepEqual(JSON.parse(fs.readFileSync(path.join(root, ".agent-studio/scaffold.json"), "utf8")).apps, ["apps/invoices"]);
+    // Feature files of the reference may be removed from the new app...
+    fs.rmSync(path.join(root, "apps/invoices/collaboration_views.py"));
+    assert.equal(run("check").code, 0);
+    // ...but skeleton modules may not.
+    fs.rmSync(path.join(root, "apps/invoices/models.py"));
+    const r = run("check", "--json");
+    assert.equal(r.code, 1);
+    assert.deepEqual(JSON.parse(r.out).apps[0].missing, ["models.py"]);
   });
 
   it("rejects invalid names", () => {

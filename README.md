@@ -20,7 +20,7 @@ Static analysis only: project code is never executed.
 
 ## Quick start
 
-1. Install `django-agent-studio-0.2.0.vsix` (Extensions → ⋯ → *Install from VSIX…*) and open your Django project.
+1. Install `django-agent-studio-0.2.1.vsix` (Extensions → ⋯ → *Install from VSIX…*) and open your Django project.
 2. Click the **Agent Studio** icon. **Home** shows a setup quest:
    1. **Install the studio**: one click writes `.agent-studio/` (CLI, rules, settings), the
       studio skills for every agent, and the CI guardrails workflow.
@@ -88,7 +88,7 @@ Project layout:
 npm install
 npm test          # generate + compile + 272 node:test tests
 npm run lint
-npm run package   # -> django-agent-studio-0.2.0.vsix
+npm run package   # -> django-agent-studio-0.2.1.vsix
 ```
 
 Press <kbd>F5</kbd> (**Run Extension**) to try it in an Extension Development Host.

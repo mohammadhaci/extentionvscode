@@ -48,6 +48,7 @@
       noDjango: "No Django project detected",
       refApp: "Reference: {ref}",
       matching: "{ok} / {total} apps match the template",
+      noneCreated: "No apps created from it yet",
       noRef: "No reference app yet",
       inSync: "CLAUDE.md, AGENTS.md and Copilot are in sync",
       stale: "Stale: {files}",
@@ -117,6 +118,7 @@
       noDjango: "ما لقيت مشروع Django",
       refApp: "المرجع: {ref}",
       matching: "{ok} من {total} أقسام مطابقة للقالب",
+      noneCreated: "لسا ما انعمل منه أي قسم",
       noRef: "لسا ما في قسم مرجعي",
       inSync: "CLAUDE.md وAGENTS.md وCopilot متزامنين",
       stale: "قديمة: {files}",
@@ -349,7 +351,7 @@
       t.pill[sc0.state === "error" ? "warn" : sc0.state],
       sc0.state === "off" ? t.noRef : el("span", null,
         el("span", { text: fmt(t.refApp, { ref: "" }) }), el("code", { text: sc0.reference || "" }),
-        el("br"), el("span", { text: fmt(t.matching, { ok: sc0.ok, total: sc0.total }) })),
+        el("br"), el("span", { text: sc0.total === 0 ? t.noneCreated : fmt(t.matching, { ok: sc0.ok, total: sc0.total }) })),
       sc0.state === "off" ? [button(t.a.setRef, "agentStudio.setReference")] : [button(t.a.newApp, "agentStudio.newApp"), button(t.a.check, "agentStudio.checkApps", true)]));
 
     var cx = s.context;

@@ -80,15 +80,20 @@ export function checkConformance(
   apps: readonly { dir: string; files: ReadonlySet<string> }[],
   settingsTexts: readonly string[],
   config: ScaffoldConfig
-): AppConformance[] {
+): { results: AppConformance[]; skipped: string[] } {
   const refName = baseOf(refDir);
   const refEntity = config.referenceEntity ?? guessSingular(refName);
-  return apps
-    .filter((a) => a.dir !== refDir && !a.dir.startsWith(`${refDir}/`))
+  const others = apps.filter((a) => a.dir !== refDir && !a.dir.startsWith(`${refDir}/`));
+  // By default only apps created from the reference are held to its structure.
+  const created = new Set(config.apps ?? []);
+  const checked = config.checkAllApps ? others : others.filter((a) => created.has(a.dir));
+  const skipped = others.filter((a) => !checked.includes(a)).map((a) => a.dir);
+  const results = checked
     .map((a) => {
       const name = baseOf(a.dir);
       const renamer = createRenamer(buildRenamePairs(refName, name, refEntity, guessSingular(name)));
       const expected = expectedFiles(refFiles, renamer, config.requiredFiles, config.exclude);
       return { dir: a.dir, missing: missingFiles(expected, a.files), registered: isRegistered(settingsTexts, a.dir) };
     });
+  return { results, skipped };
 }

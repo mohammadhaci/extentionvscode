@@ -2,7 +2,7 @@
   "name": "django-agent-studio",
   "displayName": "Django Agent Studio",
   "description": "Build a Django project with coding agents, safely: project map, skills, app scaffolding from your approved template, synced agent instructions, migration guardrails and one-page change reports, all in one place.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "django-agent-studio",
   "license": "MIT",
   "repository": {

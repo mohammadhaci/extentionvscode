@@ -43,8 +43,10 @@ describe("conformance", () => {
   const renamer = createRenamer(buildRenamePairs("orders", "invoices", "order", "invoice"));
   const ref = ["__init__.py", "apps.py", "models.py", "services/order_service.py", "migrations/__init__.py", "migrations/0001_initial.py", "templates/orders/a.html"];
 
-  it("expects the reference Python files, renamed", () => {
-    assert.deepEqual(expectedFiles(ref, renamer), ["__init__.py", "apps.py", "migrations/__init__.py", "models.py", "services/invoice_service.py"]);
+  it("expects the reference skeleton: standard modules and package markers", () => {
+    assert.deepEqual(expectedFiles(ref, renamer), ["__init__.py", "apps.py", "migrations/__init__.py", "models.py"]);
+    const big = ["models.py", "views.py", "collaboration_views.py", "forms.py", "services/__init__.py", "services/change_reviews.py", "tests/__init__.py", "tests/test_imports.py", "api/v1/__init__.py"];
+    assert.deepEqual(expectedFiles(big, renamer), ["forms.py", "models.py", "services/__init__.py", "tests/__init__.py", "views.py"]);
   });
 
   it("uses requiredFiles when configured", () => {
