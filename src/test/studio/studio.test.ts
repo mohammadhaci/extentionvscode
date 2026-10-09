@@ -24,6 +24,7 @@ const base: StudioStatus = {
   guard: { state: "pass", errors: 0, warnings: 0 },
   report: { state: "pass", verdict: "green", files: 0, commits: 0 },
   memory: { active: 0 },
+  mcp: false,
   tasks: [],
 };
 const allSet: StudioStatus = {
@@ -35,6 +36,7 @@ const allSet: StudioStatus = {
   context: { state: "pass", stale: [] },
   report: { state: "pass", verdict: "green", files: 2, commits: 1 },
   memory: { active: 5, latest: "RFQ loops are versioned" },
+  mcp: true,
 };
 
 describe("score", () => {

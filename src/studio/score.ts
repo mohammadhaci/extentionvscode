@@ -28,7 +28,7 @@ export function questsOf(s: StudioStatus): Quest[] {
     { id: "tool", done: s.tool.installed && !s.tool.outdated, action: "agentStudio.setup" },
     { id: "reference", done: s.scaffold.state !== "off", action: "agentStudio.setReference" },
     { id: "rules", done: s.context.state !== "off", action: "agentStudio.openRules" },
-    { id: "skills", done: s.skills.missing.length === 0, action: "agentStudio.setup" },
+    { id: "skills", done: s.skills.missing.length === 0 && s.mcp !== false, action: "agentStudio.setup" },
     { id: "ci", done: s.ci === "installed", action: "agentStudio.setup" },
     {
       id: "green",

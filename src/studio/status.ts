@@ -11,6 +11,7 @@ import { STUDIO_VERSION } from "../generated/version";
 import { main as guardMain } from "../guard/cli";
 import { main as reportMain } from "../report/cli";
 import { main as scaffoldMain } from "../scaffold/cli";
+import { mcpInstalled } from "../mcp/config";
 import { listMemories } from "../memory/memory";
 import { listTasks } from "../tasks/library";
 import { installedToolVersion, missingSkills } from "./install";
@@ -31,6 +32,7 @@ export interface StudioStatus {
   guard: { state: CheckState; errors: number; warnings: number; scope?: string; detail?: string };
   report: { state: CheckState; verdict?: "red" | "yellow" | "green"; branch?: string; base?: string; files: number; commits: number; detail?: string };
   memory: { active: number; latest?: string };
+  mcp: boolean;
   tasks: { id: string; icon: string; title: string; titleAr?: string; custom: boolean }[];
 }
 
@@ -113,6 +115,7 @@ export function collectStatus(root: string): StudioStatus {
     guard,
     report,
     memory: { active: memories.length, latest: memories[0]?.title },
+    mcp: mcpInstalled(root),
     tasks: listTasks(root).map((t) => ({ id: t.id, icon: t.icon, title: t.title, titleAr: t.titleAr, custom: t.path !== undefined })),
   };
 }

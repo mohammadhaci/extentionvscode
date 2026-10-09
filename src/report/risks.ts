@@ -36,7 +36,9 @@ const RULES: Rule[] = [
       // everything else in .agent-studio/ is guardrails.
       (/^\.agent-studio\//.test(p) && !/^\.agent-studio\/(memory|tasks|runs)\//.test(p)) ||
       /^\.(claude|agents|github)\/skills\//.test(p) ||
-      /^\.github\/workflows\//.test(p),
+      /^\.github\/workflows\//.test(p) ||
+      p === ".mcp.json" ||
+      p === ".vscode/mcp.json",
   },
   {
     level: "red",
@@ -90,7 +92,7 @@ const isMigration = (p: string): boolean => /(^|\/)migrations\//.test(p);
 
 /** Files "Set Up Project" (re)writes: the CLI, the studio skills and the guardrails workflow. */
 const isStudioInstall = (p: string): boolean =>
-  /^\.agent-studio\/tool\//.test(p) || /^\.(claude|agents|github)\/skills\//.test(p) || p === ".github/workflows/agent-guardrails.yml";
+  /^\.agent-studio\/tool\//.test(p) || /^\.(claude|agents|github)\/skills\//.test(p) || p === ".github/workflows/agent-guardrails.yml" || p === ".mcp.json" || p === ".vscode/mcp.json";
 
 export interface RiskOptions {
   /** Set when the installed tool's version changed on the branch (a studio update). */

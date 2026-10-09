@@ -12,7 +12,7 @@ list of files, with a single verdict at the top.
 - 🚦 **Verdict**: 🔴 needs changes, 🟡 review the flagged items, or 🟢 no problems.
 - **Needs attention:**
   - Migrations Guard errors and warnings.
-  - **Agent tooling, skills, CI or guardrail config changed.** An agent editing its own checks is always red.
+  - **Agent tooling, skills, CI, MCP config (`.mcp.json`, `.vscode/mcp.json`) or guardrail config changed.** An agent editing its own checks is always red.
     Exceptions: project memory (`.agent-studio/memory/`) is meant for agents and is listed, not flagged;
     and when the installed tool's version changed on the branch (Set Up Project after an update),
     the reinstalled tool, skills and workflow are a yellow *Agent Studio updated* item instead.

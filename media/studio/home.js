@@ -31,7 +31,7 @@
         tool: ["Install the studio", "CLI and skills agents use, in .agent-studio/"],
         reference: ["Pick your reference app", "The approved app every new app is cloned from"],
         rules: ["Write the agent rules", "One file for Claude, Codex and Copilot"],
-        skills: ["Teach your agents", "Studio skills in every agent's skill folder"],
+        skills: ["Teach your agents", "Studio skills and the MCP server for every agent"],
         ci: ["Guard every pull request", "GitHub Actions runs every check"],
         green: ["Go all green", "Every check passes on this branch"]
       },
@@ -46,10 +46,13 @@
         guard: "Migrations",
         report: "Change report",
         skills: "Skills",
-        memory: "Project memory"
+        memory: "Project memory",
+        mcp: "MCP server"
       },
       memoryLine: "{n} memories every agent shares · latest: {latest}",
       memoryEmpty: "Nothing remembered yet. Save what agents should never have to ask again.",
+      mcpOn: "Claude Code and Copilot can use the studio's tools: map, memory, checks, tasks",
+      mcpOff: "Give agents direct access to the map, memory, checks and tasks",
       appsModels: "{apps} apps · {models} models",
       noDjango: "No Django project detected",
       refApp: "Reference: {ref}",
@@ -109,7 +112,7 @@
         tool: ["ثبّت الاستوديو", "الأداة والمهارات اللي بيستعملها الوكلاء، بـ \u2068.agent-studio/\u2069"],
         reference: ["اختار القسم المرجعي", "القسم المعتمد اللي بيتنسخ منه كل قسم جديد"],
         rules: ["اكتب قواعد الوكلاء", "ملف واحد لـ Claude وCodex وCopilot"],
-        skills: ["علّم وكلاءك", "مهارات الاستوديو بمجلد كل وكيل"],
+        skills: ["علّم وكلاءك", "مهارات الاستوديو وسيرفر MCP لكل وكيل"],
         ci: ["احمي كل PR", "GitHub Actions بيشغّل كل الفحوصات"],
         green: ["خلّي كل شي أخضر", "كل الفحوصات ناجحة على هالفرع"]
       },
@@ -124,10 +127,13 @@
         guard: "الـ Migrations",
         report: "تقرير التغييرات",
         skills: "المهارات",
-        memory: "ذاكرة المشروع"
+        memory: "ذاكرة المشروع",
+        mcp: "سيرفر MCP"
       },
       memoryLine: "{n} ذكريات مشتركة بين كل الوكلاء · آخرها: {latest}",
       memoryEmpty: "لسا ما في شي محفوظ. احفظ اللي ما بدك تعيد شرحه للوكلاء.",
+      mcpOn: "Claude Code وCopilot بيقدروا يستعملوا أدوات الاستوديو: الخريطة والذاكرة والفحوصات والمهام",
+      mcpOff: "خلّي الوكلاء يوصلوا مباشرة للخريطة والذاكرة والفحوصات والمهام",
       appsModels: "{apps} أقسام · {models} models",
       noDjango: "ما لقيت مشروع Django",
       refApp: "المرجع: {ref}",
@@ -416,6 +422,10 @@
       mem.active > 0 ? String(mem.active) : t.pill.info,
       mem.active > 0 ? fmt(t.memoryLine, { n: mem.active, latest: mem.latest || "" }) : t.memoryEmpty,
       [button(t.a.remember, "agentStudio.addMemory"), mem.active > 0 ? button(t.a.browse, "agentStudio.browseMemory", true) : null]));
+    cards.appendChild(card(t, "🔌", t.cards.mcp, s.mcp ? "pass" : "off",
+      s.mcp ? t.pill.pass : t.pill.off,
+      s.mcp ? t.mcpOn : t.mcpOff,
+      s.mcp ? [] : [button(t.a.setup, "agentStudio.setup")]));
     app.appendChild(cards);
 
     // Badges
