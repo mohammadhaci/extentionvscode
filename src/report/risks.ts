@@ -32,8 +32,9 @@ const RULES: Rule[] = [
     title: "Agent guardrails or tooling changed",
     why: "Agents must not edit the tools, skills, CI or settings that check their own work. Confirm a human asked for this.",
     match: (p) =>
-      // Project memory is meant to be written by agents; everything else in .agent-studio/ is not.
-      (/^\.agent-studio\//.test(p) && !/^\.agent-studio\/memory\//.test(p)) ||
+      // Project memory is meant to be written by agents, and tasks are prompts, not checks;
+      // everything else in .agent-studio/ is guardrails.
+      (/^\.agent-studio\//.test(p) && !/^\.agent-studio\/(memory|tasks|runs)\//.test(p)) ||
       /^\.(claude|agents|github)\/skills\//.test(p) ||
       /^\.github\/workflows\//.test(p),
   },

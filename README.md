@@ -9,6 +9,7 @@ Everything lives behind one **Agent Studio** icon in the Activity Bar:
 | View / tool | What it does | Docs |
 | --- | --- | --- |
 | 🏠 **Home** | Health score, setup quest, every tool at a glance, badges | below |
+| 🎯 **Agent tasks** | One click gives Claude Code, Codex or Copilot an expert task (security audit, tests, bugs, performance, review…) with your project's context | [tasks](docs/tasks.md) |
 | 🗺️ **Project Map** | Apps, URLs, views, models and relations as an interactive map | [map](docs/map.md) |
 | 🧠 **Skills** | Browse, copy, remove and import agent skills (`SKILL.md`) | [skills](docs/skills.md) |
 | 🧬 **New apps** | Clone the approved reference app into new apps, renamed and registered | [scaffold](docs/scaffold.md) |
@@ -43,6 +44,7 @@ into the project memory, so the next agent (or the next session) starts from it.
   is failing, 😎 nearly there, 🥳 all green (with confetti).
 - **Setup quest** with levels, from *Newcomer* to *Legend*. The next step is highlighted, and each
   step has a *Do it* button.
+- **Agent tasks**: one button per task, plus your own custom tasks.
 - **Tool cards**: live state and one-click actions for every tool.
 - **Badges**: 🧹 clean migrations, 🧬 template keeper, 🔗 in sync, 🧠 skilled, 🛡️ guarded,
   🌿 green branch, 🐘 elephant memory, 🏆 all-star.
@@ -58,6 +60,7 @@ node .agent-studio/tool/cli.js scaffold new invoices --entity Invoice   # clone 
 node .agent-studio/tool/cli.js context sync                             # refresh CLAUDE.md / AGENTS.md / Copilot
 node .agent-studio/tool/cli.js guard check --base origin/main           # migration safety
 node .agent-studio/tool/cli.js report                                   # one-page branch review
+node .agent-studio/tool/cli.js tasks show security-audit --app apps/rfq # a ready-made prompt
 node .agent-studio/tool/cli.js memory search celery                     # what the project already knows
 node .agent-studio/tool/cli.js memory add --type gotcha --title "…"     # remember something for every agent
 node .agent-studio/tool/cli.js doctor                                   # every check, one summary
@@ -75,6 +78,8 @@ Project layout:
   scaffold.json    reference app and scaffolding options (JSON schema in the editor)
   context.json     optional: instruction targets and project map options
   memory/          project memory: one Markdown file per fact, written by agents and humans
+  tasks/           optional: your own agent tasks (one Markdown prompt each)
+  runs/            prompts sent to agents (git-ignored)
 ```
 
 ## Settings
@@ -86,12 +91,14 @@ Project layout:
 | `agentStudio.autoSyncContext` | `true` | Re-sync agent instructions when Python files or rules change |
 | `agentStudio.guardBase` | `HEAD` | What the editor's migration check compares with |
 | `agentStudio.reportBase` | closest of `origin/main`, `main`, … | What the change report compares with |
+| `agentStudio.taskTarget` | `ask` | Where agent tasks go: Claude Code, Codex, Copilot Chat, clipboard or a file |
+| `agentStudio.claudeCommand` / `codexCommand` | `claude` / `codex` | Terminal commands used for agent tasks |
 
 ## Develop
 
 ```sh
 npm install
-npm test          # generate + compile + 282 node:test tests
+npm test          # generate + compile + 289 node:test tests
 npm run lint
 npm run package   # -> django-agent-studio-0.2.1.vsix
 ```
@@ -101,11 +108,11 @@ Press <kbd>F5</kbd> (**Run Extension**) to try it in an Extension Development Ho
 ```
 src/
   extension.ts      activates every module
-  cli.ts            the project CLI (scaffold | context | guard | memory | report | doctor)
+  cli.ts            the project CLI (scaffold | context | guard | memory | tasks | report | doctor)
   studio/           Home view, setup, status and score, shared paths
   map/ analyzer/ shared/   Project Map and the Django static analyzer
   skillsDashboard/  Skills view
-  scaffold/ context/ guard/ report/ memory/   the agent tools (pure core + cli.ts + ui.ts)
+  scaffold/ context/ guard/ report/ memory/ tasks/   the agent tools (pure core + cli.ts + ui.ts)
 media/              webview assets (map, skills, studio Home)
 agent-kit/skills/   skills installed into projects
 ci/                 the guardrails workflow template (embedded at build time)
@@ -117,6 +124,7 @@ ci/                 the guardrails workflow template (embedded at build time)
 
 إضافة وحدة فيها كل شي لبناء مشروع Django مع الوكلاء (Claude وCodex وCopilot):
 - 🏠 صفحة رئيسية فيها نسبة صحة المشروع، ومهمة تجهيز بمستويات، وأوسمة، واحتفال لما يصير كل شي أخضر.
+- 🎯 أزرار مهام: كبسة وحدة بتعطي Claude أو Codex أو Copilot مهمة جاهزة (فحص أمان، اختبارات، أخطاء، أداء، مراجعة…) مع معلومات مشروعك.
 - 🗺️ خريطة المشروع.
 - 🧠 المهارات.
 - 🧬 أقسام جديدة من القالب المعتمد.

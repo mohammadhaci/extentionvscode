@@ -24,6 +24,7 @@ const base: StudioStatus = {
   guard: { state: "pass", errors: 0, warnings: 0 },
   report: { state: "pass", verdict: "green", files: 0, commits: 0 },
   memory: { active: 0 },
+  tasks: [],
 };
 const allSet: StudioStatus = {
   ...base,

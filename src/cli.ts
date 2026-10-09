@@ -8,6 +8,7 @@ import { main as guardMain } from "./guard/cli";
 import { main as memoryMain } from "./memory/cli";
 import { main as reportMain } from "./report/cli";
 import { main as scaffoldMain } from "./scaffold/cli";
+import { main as tasksMain } from "./tasks/cli";
 import { CLI, RULES_FILE, SCAFFOLD_CONFIG } from "./studio/paths";
 import { Io, runCaptured } from "./studio/run";
 
@@ -18,6 +19,7 @@ Usage (run from anywhere inside the project):
   ${CLI} context  <sync|check|print|init|install-ci> Keep CLAUDE.md, AGENTS.md and Copilot instructions in sync
   ${CLI} guard    <check|rules> ...                 Static safety checks for Django migrations
   ${CLI} memory   <add|list|search|show|outdated>   Shared project memory for every agent and session
+  ${CLI} tasks    <list|show|new> ...               Ready-made agent tasks (security audit, tests, ...)
   ${CLI} report   [--base <ref>] ...                One-page review of the current branch
   ${CLI} doctor   [--base <ref>]                    Run every check; exit 1 if any fails
   ${CLI} version
@@ -110,6 +112,8 @@ export function main(argv: readonly string[], io: Io): number {
       return guardMain(rest, io);
     case "memory":
       return memoryMain(rest, io);
+    case "tasks":
+      return tasksMain(rest, io);
     case "report":
       return reportMain(argv, io);
     case "doctor":

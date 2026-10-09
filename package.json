@@ -28,7 +28,8 @@
     "migrations",
     "python",
     "scaffold",
-    "skills"
+    "skills",
+    "prompts"
   ],
   "activationEvents": [
     "workspaceContains:manage.py",
@@ -139,6 +140,17 @@
         "title": "Browse Project Memory",
         "category": "Agent Studio",
         "icon": "$(library)"
+      },
+      {
+        "command": "agentStudio.runTask",
+        "title": "Give an Agent a Task…",
+        "category": "Agent Studio",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "agentStudio.newTask",
+        "title": "New Custom Agent Task",
+        "category": "Agent Studio"
       }
     ],
     "viewsContainers": {
@@ -172,6 +184,11 @@
     },
     "menus": {
       "view/title": [
+        {
+          "command": "agentStudio.runTask",
+          "when": "view == agentStudio.home",
+          "group": "navigation@0"
+        },
         {
           "command": "agentStudio.setup",
           "when": "view == agentStudio.home",
@@ -213,6 +230,11 @@
           "command": "agentStudio.setReference",
           "when": "explorerResourceIsFolder",
           "group": "2_workspace@11"
+        },
+        {
+          "command": "agentStudio.runTask",
+          "when": "explorerResourceIsFolder",
+          "group": "2_workspace@12"
         }
       ],
       "commandPalette": [
@@ -267,6 +289,37 @@
           "type": "string",
           "default": "",
           "description": "Git ref the change report compares with. Empty: the closest of origin/main, origin/master, main or master."
+        },
+        "agentStudio.taskTarget": {
+          "type": "string",
+          "enum": [
+            "ask",
+            "claude",
+            "codex",
+            "copilot",
+            "clipboard",
+            "file"
+          ],
+          "default": "ask",
+          "enumDescriptions": [
+            "Ask every time",
+            "Claude Code in a terminal",
+            "Codex CLI in a terminal",
+            "Copilot Chat in agent mode",
+            "Copy the prompt",
+            "Open the prompt as a file"
+          ],
+          "description": "Where agent tasks are sent."
+        },
+        "agentStudio.claudeCommand": {
+          "type": "string",
+          "default": "claude",
+          "description": "Command that starts Claude Code in a terminal, for agent tasks."
+        },
+        "agentStudio.codexCommand": {
+          "type": "string",
+          "default": "codex",
+          "description": "Command that starts Codex CLI in a terminal, for agent tasks."
         }
       }
     },

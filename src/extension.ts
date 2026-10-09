@@ -2,7 +2,8 @@
 //   Home    health score, setup quest, every tool at a glance
 //   Map     apps, URLs, views, models and relations (static analysis)
 //   Skills  browse, copy and import agent skills
-//   Scaffold / Context / Guard / Report: the agent tools, also shipped as a CLI
+//   Tasks   one-click, ready-made tasks for any agent
+//   Scaffold / Context / Guard / Report / Memory: the agent tools, also shipped as a CLI
 import * as vscode from "vscode";
 import { activateContext } from "./context/ui";
 import { activateGuard } from "./guard/ui";
@@ -11,6 +12,7 @@ import { activateMemory } from "./memory/ui";
 import { activateReport } from "./report/ui";
 import { activateScaffold } from "./scaffold/ui";
 import { activateSkills, deactivateSkills } from "./skillsDashboard/ui";
+import { activateTasks } from "./tasks/ui";
 import { HOME_VIEW_ID, HomeViewProvider } from "./studio/home";
 import { runSetup } from "./studio/setup";
 
@@ -37,6 +39,7 @@ export function activate(context: vscode.ExtensionContext): void {
   activateGuard(context);
   activateReport(context);
   activateMemory(context);
+  activateTasks(context);
 
   // Keep Home current while files that affect it change.
   const watcher = vscode.workspace.createFileSystemWatcher(

@@ -35,6 +35,9 @@
         ci: ["Guard every pull request", "GitHub Actions runs every check"],
         green: ["Go all green", "Every check passes on this branch"]
       },
+      tasks: "Agent tasks",
+      tasksHint: "One click gives an agent a ready-made task with your project's context, rules and memory.",
+      newTask: "＋ Custom task",
       tools: "Your tools",
       cards: {
         map: "Project map",
@@ -110,6 +113,9 @@
         ci: ["احمي كل PR", "GitHub Actions بيشغّل كل الفحوصات"],
         green: ["خلّي كل شي أخضر", "كل الفحوصات ناجحة على هالفرع"]
       },
+      tasks: "مهام الوكلاء",
+      tasksHint: "كبسة وحدة بتعطي الوكيل مهمة جاهزة مع معلومات مشروعك وقواعده وذاكرته.",
+      newTask: "＋ مهمة خاصة",
       tools: "أدواتك",
       cards: {
         map: "خريطة المشروع",
@@ -346,6 +352,22 @@
         q.done ? null : button(t.doIt, q.action, !isNext)));
     });
     app.appendChild(quest);
+
+    // Agent tasks
+    var tasks = s.tasks || [];
+    if (tasks.length) {
+      app.appendChild(el("div", { class: "section-title" }, el("span", { text: "🎯 " + t.tasks })));
+      app.appendChild(el("div", { class: "hint", text: t.tasksHint }));
+      app.appendChild(el("div", { class: "tasks" },
+        tasks.map(function (task) {
+          return el("button", {
+            class: "task" + (task.custom ? " custom" : ""),
+            title: task.title,
+            onclick: function () { vscode.postMessage({ type: "task", id: task.id }); }
+          }, el("span", { class: "task-icon", text: task.icon }), el("span", { class: "task-name", text: (lang === "ar" && task.titleAr) || task.title }));
+        }),
+        el("button", { class: "task ghost new", text: t.newTask, onclick: function () { run("agentStudio.newTask"); } })));
+    }
 
     // Tool cards
     app.appendChild(el("div", { class: "section-title" }, el("span", { text: "🧰 " + t.tools })));

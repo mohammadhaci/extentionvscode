@@ -14,6 +14,8 @@ export const CONTEXT_CONFIG = `${STUDIO_DIR}/context.json`;
 export const RULES_FILE = `${STUDIO_DIR}/rules.md`;
 /** Shared project memory: one Markdown file per entry. */
 export const MEMORY_DIR = `${STUDIO_DIR}/memory`;
+export const TASKS_DIR = `${STUDIO_DIR}/tasks`;
+export const RUNS_DIR = `${STUDIO_DIR}/runs`;
 /** Project skill roots read by Claude Code, Codex and GitHub Copilot. */
 export const SKILL_ROOTS = [".claude/skills", ".agents/skills", ".github/skills"];
 /** Skills shipped with the studio (folders under agent-kit/skills/). */
