@@ -30,7 +30,9 @@ function decoderLabelForCodec(codec: string): string | undefined {
     case "latin1":
     case "iso-8859-1":
     case "iso8859-1":
-      return "windows-1252";
+      // Python's latin-1 is strict ISO-8859-1 (every byte maps to U+00xx), unlike
+      // WHATWG, which treats the label as windows-1252.
+      return "iso-8859-1";
     case "cp1252":
     case "windows-1252":
     case "windows1252":
@@ -72,7 +74,41 @@ export function declaredEncoding(bytes: Uint8Array): string | undefined {
   return undefined;
 }
 
+// windows-1252 code points for bytes 0x80-0x9F (0 = undefined in cp1252).
+// Some Node releases decode "windows-1252" as ISO-8859-1, turning e.g. 0x93
+// into the control character U+0093 instead of “, so map these explicitly.
+const CP1252_HIGH = [
+  0x20ac, 0, 0x201a, 0x0192, 0x201e, 0x2026, 0x2020, 0x2021, 0x02c6, 0x2030, 0x0160, 0x2039, 0x0152, 0, 0x017d, 0,
+  0, 0x2018, 0x2019, 0x201c, 0x201d, 0x2022, 0x2013, 0x2014, 0x02dc, 0x2122, 0x0161, 0x203a, 0x0153, 0, 0x017e, 0x0178,
+];
+
+function decodeCp1252(bytes: Uint8Array, declared: string): string {
+  let out = "";
+  for (const b of bytes) {
+    if (b >= 0x80 && b <= 0x9f) {
+      const cp = CP1252_HIGH[b - 0x80];
+      if (!cp) {
+        throw new PythonDecodeError(`cannot decode as "${declared}"`);
+      }
+      out += String.fromCharCode(cp);
+    } else {
+      out += String.fromCharCode(b);
+    }
+  }
+  return out;
+}
+
 function decodeFatal(bytes: Uint8Array, label: string, declared: string): string {
+  if (label === "windows-1252") {
+    return decodeCp1252(bytes, declared);
+  }
+  if (label === "iso-8859-1") {
+    let out = "";
+    for (const b of bytes) {
+      out += String.fromCharCode(b);
+    }
+    return out;
+  }
   try {
     const text = new TextDecoder(label, { fatal: true }).decode(bytes);
     // Strip a stray leading BOM character (U+FEFF, written here literally).

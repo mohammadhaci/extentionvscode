@@ -1,0 +1,308 @@
+/* Django Agent Studio — Home view. Follows the VS Code theme; accents only add colour. */
+:root {
+  --as-green: #22c55e;
+  --as-amber: #f59e0b;
+  --as-red: #ef4444;
+  --as-grey: #8b8b8b;
+  --as-violet: #8b5cf6;
+  --as-sky: #0ea5e9;
+  --as-pink: #ec4899;
+  --as-radius: 10px;
+  --as-gap: 10px;
+  --as-card: var(--vscode-sideBarSectionHeader-background, rgba(127, 127, 127, 0.08));
+  --as-border: var(--vscode-widget-border, rgba(127, 127, 127, 0.25));
+  --as-muted: var(--vscode-descriptionForeground, #8b8b8b);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 10px 12px 16px;
+  font-family: var(--vscode-font-family, -apple-system, "Segoe UI", sans-serif);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--vscode-foreground);
+  background: var(--vscode-sideBar-background, var(--vscode-editor-background));
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+button:hover { background: var(--vscode-button-hoverBackground); }
+button:active { transform: scale(0.96); }
+button:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 2px; }
+button.ghost {
+  color: var(--vscode-foreground);
+  background: transparent;
+  border: 1px solid var(--as-border);
+}
+button.ghost:hover { background: var(--vscode-toolbar-hoverBackground, rgba(127, 127, 127, 0.15)); }
+button.link {
+  background: none;
+  color: var(--vscode-textLink-foreground);
+  padding: 0 2px;
+}
+
+code, .mono {
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.95em;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.section-title {
+  margin: 16px 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--as-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+[dir="rtl"] .section-title { letter-spacing: 0; }
+
+/* ---------- hero ---------- */
+.hero {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--as-border);
+  background:
+    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--mood) 22%, transparent), transparent 60%),
+    var(--as-card);
+  overflow: hidden;
+}
+.hero.busy::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.08) 50%, transparent 70%);
+  animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+.ring { position: relative; width: 84px; height: 84px; flex: none; }
+.ring svg { width: 84px; height: 84px; transform: rotate(-90deg); }
+.ring .track { stroke: var(--as-border); }
+.ring .value {
+  stroke: var(--mood);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.9s cubic-bezier(0.2, 0.8, 0.2, 1), stroke 0.4s;
+}
+.ring .face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 30px;
+  line-height: 1;
+}
+.ring .face span { display: inline-block; animation: bob 2.6s ease-in-out infinite; }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+
+.hero-text { min-width: 0; flex: 1; }
+.hero-title { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hero-score { font-size: 24px; font-weight: 800; color: var(--mood); line-height: 1.1; }
+.hero-score small { font-size: 12px; font-weight: 600; color: var(--as-muted); }
+.hero-line { color: var(--as-muted); margin-top: 2px; }
+
+.level {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+.level .chip {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--as-violet) 25%, transparent);
+  color: var(--vscode-foreground);
+  white-space: nowrap;
+}
+.bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--as-border);
+  overflow: hidden;
+}
+.bar > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--as-violet), var(--as-sky), var(--as-green));
+  transition: width 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ---------- banners ---------- */
+.banner {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: var(--as-radius);
+  border: 1px solid color-mix(in srgb, var(--as-amber) 50%, transparent);
+  background: color-mix(in srgb, var(--as-amber) 12%, transparent);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ---------- quest ---------- */
+.quest { display: flex; flex-direction: column; gap: 6px; }
+.step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: var(--as-radius);
+  border: 1px solid var(--as-border);
+  background: var(--as-card);
+}
+.step .tick {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  border: 1.5px solid var(--as-border);
+  color: transparent;
+}
+.step.done .tick {
+  border-color: var(--as-green);
+  background: var(--as-green);
+  color: #fff;
+  animation: pop 0.35s ease;
+}
+@keyframes pop { 0% { transform: scale(0.4); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+.step .label { flex: 1; min-width: 0; }
+.step .label b { font-weight: 600; }
+.step .label div { color: var(--as-muted); font-size: 11.5px; }
+.step.done .label b { text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--as-green) 70%, transparent); }
+.step.next { border-color: color-mix(in srgb, var(--as-sky) 60%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--as-sky) 30%, transparent) inset; }
+
+/* ---------- tool cards ---------- */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: var(--as-gap);
+}
+.card {
+  position: relative;
+  padding: 10px 10px 10px 14px;
+  border-radius: var(--as-radius);
+  border: 1px solid var(--as-border);
+  background: var(--as-card);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.card:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--state) 60%, var(--as-border)); }
+.card::before {
+  content: "";
+  position: absolute;
+  inset-block: 8px;
+  inset-inline-start: 0;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--state);
+}
+[dir="rtl"] .card { padding: 10px 14px 10px 10px; }
+[dir="rtl"] .card::before { border-radius: 4px 0 0 4px; }
+.card-head { display: flex; align-items: center; gap: 8px; }
+.card-icon { font-size: 18px; }
+.card-name { font-weight: 700; flex: 1; }
+.pill {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+  color: var(--state);
+  background: color-mix(in srgb, var(--state) 16%, transparent);
+  white-space: nowrap;
+}
+.card-body { color: var(--as-muted); min-height: 18px; overflow-wrap: anywhere; }
+.card-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.s-pass { --state: var(--as-green); }
+.s-warn { --state: var(--as-amber); }
+.s-fail { --state: var(--as-red); }
+.s-off { --state: var(--as-grey); }
+.s-info { --state: var(--as-sky); }
+
+/* ---------- badges ---------- */
+.badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  border: 1px solid var(--as-border);
+  background: var(--as-card);
+  position: relative;
+  transition: transform 0.15s ease;
+}
+.badge:hover { transform: scale(1.08) rotate(-3deg); }
+.badge.locked { filter: grayscale(1); opacity: 0.35; }
+.badge.earned { border-color: color-mix(in srgb, var(--as-amber) 60%, transparent); box-shadow: 0 0 10px color-mix(in srgb, var(--as-amber) 25%, transparent); }
+
+/* ---------- footer ---------- */
+.footer {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--as-muted);
+  font-size: 11px;
+}
+.lang { display: inline-flex; border: 1px solid var(--as-border); border-radius: 6px; overflow: hidden; }
+.lang button { border-radius: 0; background: transparent; color: var(--vscode-foreground); padding: 2px 8px; }
+.lang button[aria-pressed="true"] { background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
+
+.empty {
+  text-align: center;
+  padding: 28px 12px;
+  border-radius: 14px;
+  border: 1px dashed var(--as-border);
+}
+.empty .big { font-size: 40px; }
+
+/* ---------- confetti ---------- */
+.confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 10; }
+.confetti i {
+  position: absolute;
+  top: -12px;
+  width: 7px;
+  height: 11px;
+  border-radius: 2px;
+  opacity: 0.9;
+  animation: fall linear forwards;
+}
+@keyframes fall {
+  to { transform: translate3d(var(--dx), 110vh, 0) rotate(var(--rot)); opacity: 0.6; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .confetti { display: none; }
+}
