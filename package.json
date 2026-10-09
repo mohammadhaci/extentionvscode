@@ -1,86 +1,281 @@
 {
-  "name": "django-visual-map",
-  "displayName": "Django Visual Map",
-  "description": "Analyze a Django project and show a visual map of apps, URLs, views, models and relationships.",
-  "version": "0.1.0",
-  "publisher": "django-visual-map",
+  "name": "django-agent-studio",
+  "displayName": "Django Agent Studio",
+  "description": "Build a Django project with coding agents, safely: project map, skills, app scaffolding from your approved template, synced agent instructions, migration guardrails and one-page change reports, all in one place.",
+  "version": "0.2.0",
+  "publisher": "django-agent-studio",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/example/django-visual-map"
+    "url": "https://github.com/mohammadhaci/extentionvscode"
   },
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
-    "Other",
-    "Visualization"
+    "Visualization",
+    "Linters",
+    "Other"
   ],
   "keywords": [
     "django",
     "python",
-    "visualization",
-    "map",
-    "urls",
-    "models"
+    "agents",
+    "claude",
+    "codex",
+    "copilot",
+    "migrations",
+    "scaffold",
+    "AGENTS.md",
+    "skills"
   ],
   "activationEvents": [
-    "onCommand:django-visual-map.openMap",
-    "onView:django-visual-map.sidebar"
+    "workspaceContains:manage.py",
+    "workspaceContains:.agent-studio/rules.md",
+    "workspaceContains:**/migrations/0001_*.py"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "django-visual-map.openMap",
-        "title": "Django Visual Map: Open Project Map"
+        "command": "agentStudio.setup",
+        "title": "Set Up Project (tool, skills, rules, CI)",
+        "category": "Agent Studio",
+        "icon": "$(rocket)"
       },
       {
-        "command": "django-visual-map.refresh",
-        "title": "Django Visual Map: Refresh Project Map"
+        "command": "agentStudio.showHome",
+        "title": "Show Home",
+        "category": "Agent Studio",
+        "icon": "$(home)"
+      },
+      {
+        "command": "agentStudio.refreshHome",
+        "title": "Refresh Home",
+        "category": "Agent Studio",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "agentStudio.openMap",
+        "title": "Open Project Map",
+        "category": "Agent Studio",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "agentStudio.refreshMap",
+        "title": "Refresh Project Map",
+        "category": "Agent Studio",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "agentStudio.openSkills",
+        "title": "Open Skills Dashboard",
+        "category": "Agent Studio",
+        "icon": "$(book)"
+      },
+      {
+        "command": "agentStudio.refreshSkills",
+        "title": "Refresh Skills",
+        "category": "Agent Studio",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "agentStudio.newApp",
+        "title": "New App from Reference",
+        "category": "Agent Studio",
+        "icon": "$(add)"
+      },
+      {
+        "command": "agentStudio.setReference",
+        "title": "Set as Reference App",
+        "category": "Agent Studio",
+        "icon": "$(star)"
+      },
+      {
+        "command": "agentStudio.checkApps",
+        "title": "Check Apps Against Reference",
+        "category": "Agent Studio",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "agentStudio.openRules",
+        "title": "Open Agent Rules",
+        "category": "Agent Studio",
+        "icon": "$(law)"
+      },
+      {
+        "command": "agentStudio.syncContext",
+        "title": "Sync Agent Instructions",
+        "category": "Agent Studio",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "agentStudio.checkMigrations",
+        "title": "Check Migrations",
+        "category": "Agent Studio",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "agentStudio.showReport",
+        "title": "Show Change Report for Current Branch",
+        "category": "Agent Studio",
+        "icon": "$(git-pull-request)"
+      },
+      {
+        "command": "agentStudio.copyReport",
+        "title": "Copy Change Report (for PR Description)",
+        "category": "Agent Studio",
+        "icon": "$(copy)"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "django-visual-map",
-          "title": "Django Map",
-          "icon": "media/icon.svg"
+          "id": "agentStudio",
+          "title": "Agent Studio",
+          "icon": "media/studio-icon.svg"
         }
       ]
     },
     "views": {
-      "django-visual-map": [
+      "agentStudio": [
         {
-          "id": "django-visual-map.sidebar",
+          "id": "agentStudio.home",
+          "name": "Home",
+          "type": "webview"
+        },
+        {
+          "id": "agentStudio.map",
           "name": "Project Map",
           "type": "webview"
+        },
+        {
+          "id": "agentStudio.skills",
+          "name": "Skills",
+          "type": "webview",
+          "visibility": "collapsed"
         }
       ]
     },
     "menus": {
-      "commandPalette": [
-        {
-          "command": "django-visual-map.openMap"
-        },
-        {
-          "command": "django-visual-map.refresh"
-        }
-      ],
       "view/title": [
         {
-          "command": "django-visual-map.refresh",
-          "when": "view == django-visual-map.sidebar",
-          "group": "navigation"
+          "command": "agentStudio.setup",
+          "when": "view == agentStudio.home",
+          "group": "navigation@1"
+        },
+        {
+          "command": "agentStudio.refreshHome",
+          "when": "view == agentStudio.home",
+          "group": "navigation@2"
+        },
+        {
+          "command": "agentStudio.openMap",
+          "when": "view == agentStudio.map",
+          "group": "navigation@1"
+        },
+        {
+          "command": "agentStudio.refreshMap",
+          "when": "view == agentStudio.map",
+          "group": "navigation@2"
+        },
+        {
+          "command": "agentStudio.openSkills",
+          "when": "view == agentStudio.skills",
+          "group": "navigation@1"
+        },
+        {
+          "command": "agentStudio.refreshSkills",
+          "when": "view == agentStudio.skills",
+          "group": "navigation@2"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "agentStudio.newApp",
+          "when": "explorerResourceIsFolder",
+          "group": "2_workspace@10"
+        },
+        {
+          "command": "agentStudio.setReference",
+          "when": "explorerResourceIsFolder",
+          "group": "2_workspace@11"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "agentStudio.refreshHome",
+          "when": "false"
         }
       ]
-    }
+    },
+    "configuration": {
+      "title": "Django Agent Studio",
+      "properties": {
+        "agentStudio.skillRoots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            ".claude/skills",
+            ".agents/skills",
+            ".github/skills",
+            ".cursor/skills",
+            ".codex/skills",
+            ".opencode/skills",
+            ".gemini/skills"
+          ],
+          "description": "Workspace-relative folders the Skills view scans for skill folders containing SKILL.md."
+        },
+        "agentStudio.installSkillsTo": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            ".claude/skills",
+            ".agents/skills",
+            ".github/skills"
+          ],
+          "description": "Where Set Up Project installs the studio's agent skills (Claude Code, Codex, GitHub Copilot)."
+        },
+        "agentStudio.autoSyncContext": {
+          "type": "boolean",
+          "default": true,
+          "description": "Re-sync CLAUDE.md, AGENTS.md and Copilot instructions a few seconds after Python files or .agent-studio/rules.md change (only in projects with a rules file)."
+        },
+        "agentStudio.guardBase": {
+          "type": "string",
+          "default": "HEAD",
+          "description": "Git ref Migrations Guard compares with in the editor. \"HEAD\" checks uncommitted work; \"origin/main\" checks the whole branch."
+        },
+        "agentStudio.reportBase": {
+          "type": "string",
+          "default": "",
+          "description": "Git ref the change report compares with. Empty: the closest of origin/main, origin/master, main or master."
+        }
+      }
+    },
+    "jsonValidation": [
+      {
+        "fileMatch": "**/.agent-studio/scaffold.json",
+        "url": "./schema/scaffold.schema.json"
+      },
+      {
+        "fileMatch": "**/.agent-studio/context.json",
+        "url": "./schema/context.schema.json"
+      }
+    ]
   },
   "scripts": {
+    "generate": "node scripts/generate.js",
+    "precompile": "npm run generate",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "watch": "npm run generate && tsc -watch -p ./",
     "test": "npm run compile && node --test \"out/test/**/*.test.js\"",
-    "lint": "eslint src --ext .ts",
+    "prelint": "npm run generate",
+    "lint": "eslint src",
     "vscode:prepublish": "npm run compile",
     "package": "vsce package"
   },

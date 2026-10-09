@@ -1,91 +1,125 @@
-# Django Visual Map
+# 🤖 Django Agent Studio
 
-A VS Code extension that analyzes a Django project and shows a clear, visual map of
-**apps → URL sections → views → models → relationships** (plus template references).
+One VS Code extension for building a Django project **with coding agents** (Claude Code,
+Codex, GitHub Copilot), safely. You set the rules and review; the agents do the work, and
+the studio keeps them on track.
 
-It uses a **local, dependency-light static analyzer**: Python files are read as text and
-parsed heuristically. **Project code is never executed and Django does not need to be
-installed.** Anything inferred by heuristics (unresolved view references, name-based
-view↔model links) is flagged with a `~ heuristic` badge in the UI.
+Everything lives behind one **Agent Studio** icon in the Activity Bar:
 
-## Features
+| View / tool | What it does | Docs |
+| --- | --- | --- |
+| 🏠 **Home** | Health score, setup quest, every tool at a glance, badges | below |
+| 🗺️ **Project Map** | Apps, URLs, views, models and relations as an interactive map | [map](docs/map.md) |
+| 🧠 **Skills** | Browse, copy, remove and import agent skills (`SKILL.md`) | [skills](docs/skills.md) |
+| 🧬 **New apps** | Clone the approved reference app into new apps, renamed and registered | [scaffold](docs/scaffold.md) |
+| 📜 **Agent rules** | One `rules.md` plus a live project map, synced to `CLAUDE.md`, `AGENTS.md` and Copilot | [context](docs/context.md) |
+| 🛡️ **Migrations** | Static safety checks: data loss, NOT NULL traps, edited or conflicting migrations | [guard](docs/guard.md) |
+| 📋 **Change report** | One-page review of a branch in Django terms, with a red/yellow/green verdict | [report](docs/report.md) |
 
-- Command **Django Visual Map: Open Project Map** (command palette) + an Activity Bar
-  view (`Django Map`) with a project summary, *Open Project Map* and *Refresh* actions.
-- Discovers Django apps (`models.py` / `views.py` / `urls.py` / `apps.py`), the root
-  URLconf (via `ROOT_URLCONF` or convention), URL patterns incl. `include()` and
-  multi-line entries, function + class-based views, models with fields and
-  `ForeignKey` / `OneToOneField` / `ManyToManyField` relations, and template references.
-- Navigable map: search, per-kind toggles, per-app filter, heuristic on/off, click or
-  keyboard selection, details panel with source file/line + **Open source** button,
-  relationship list, zoom (buttons / wheel / `+` `-`), pan (drag / touch), fit-to-view (`0`),
-  `/` focuses search, `Tab`/`Enter`/arrows move between nodes.
-- Graceful empty state for non-Django folders and actionable errors (no open folder,
-  unreadable files, skipped oversized files).
+Static analysis only: project code is never executed.
 
-## Install (development)
+## Quick start
 
-```bash
+1. Install `django-agent-studio-0.2.0.vsix` (Extensions → ⋯ → *Install from VSIX…*) and open your Django project.
+2. Click the **Agent Studio** icon. **Home** shows a setup quest:
+   1. **Install the studio**: one click writes `.agent-studio/` (CLI, rules, settings), the
+      studio skills for every agent, and the CI guardrails workflow.
+   2. **Pick your reference app**: the approved app every new app is cloned from.
+   3. **Write the agent rules** in `.agent-studio/rules.md`.
+   4. **Teach your agents** (skills) and **guard every pull request** (CI).
+   5. **Go all green.**
+3. Commit `.agent-studio/`, the skill folders, `CLAUDE.md`, `AGENTS.md`,
+   `.github/copilot-instructions.md` and `.github/workflows/agent-guardrails.yml`.
+
+From then on, ask any agent for *"a new invoices section"*. Its skills make it clone the
+reference app, build the feature the same way, check the migrations and structure, refresh
+every agent's instructions, and hand over a change report.
+
+## Home
+
+- **Health ring** (0–100) with a mood: 😴 nothing set up yet, 🙂 good progress, 😬 something
+  is failing, 😎 nearly there, 🥳 all green (with confetti).
+- **Setup quest** with levels, from *Newcomer* to *Legend*. The next step is highlighted, and each
+  step has a *Do it* button.
+- **Tool cards**: live state and one-click actions for every tool.
+- **Badges**: 🧹 clean migrations, 🧬 template keeper, 🔗 in sync, 🧠 skilled, 🛡️ guarded,
+  🌿 green branch, 🏆 all-star.
+- **English / عربي**, with right-to-left layout. Follows your theme; animations respect
+  *reduce motion*.
+
+## For agents and CI: one CLI
+
+`Set Up Project` installs a dependency-free CLI (Node + git only) into the project:
+
+```sh
+node .agent-studio/tool/cli.js scaffold new invoices --entity Invoice   # clone the reference app
+node .agent-studio/tool/cli.js context sync                             # refresh CLAUDE.md / AGENTS.md / Copilot
+node .agent-studio/tool/cli.js guard check --base origin/main           # migration safety
+node .agent-studio/tool/cli.js report                                   # one-page branch review
+node .agent-studio/tool/cli.js doctor                                   # every check, one summary
+```
+
+The CI workflow runs the change report and every check on each pull request, and on pushes
+to `main`/`master`.
+
+Project layout:
+
+```
+.agent-studio/
+  tool/            the CLI (re-installed by Set Up Project when the extension updates)
+  rules.md         agent rules: the single source for every agent
+  scaffold.json    reference app and scaffolding options (JSON schema in the editor)
+  context.json     optional: instruction targets and project map options
+```
+
+## Settings
+
+| Setting | Default | Purpose |
+| --- | --- | --- |
+| `agentStudio.skillRoots` | 7 common skill folders | Where the Skills view looks |
+| `agentStudio.installSkillsTo` | `.claude/skills`, `.agents/skills`, `.github/skills` | Where setup installs the studio skills |
+| `agentStudio.autoSyncContext` | `true` | Re-sync agent instructions when Python files or rules change |
+| `agentStudio.guardBase` | `HEAD` | What the editor's migration check compares with |
+| `agentStudio.reportBase` | closest of `origin/main`, `main`, … | What the change report compares with |
+
+## Develop
+
+```sh
 npm install
-npm run compile
+npm test          # generate + compile + 272 node:test tests
+npm run lint
+npm run package   # -> django-agent-studio-0.2.0.vsix
 ```
 
-Then press `F5` in VS Code (uses `.vscode/launch.json`) to open an Extension Development
-Host, open a Django project folder, and run **Django Visual Map: Open Project Map**.
-
-To build a distributable `.vsix`:
-
-```bash
-npm run package   # builds django-visual-map-0.1.0.vsix via the @vscode/vsce devDependency
-```
-
-## Use
-
-1. `File → Open Folder…` on your Django project (the folder with `manage.py`).
-2. Run `Django Visual Map: Open Project Map` from the command palette, or click the
-   `Django Map` icon in the Activity Bar → **Open Project Map**.
-3. Explore: filter with the kind chips / app dropdown, search, click any node for
-   details, **Open source** jumps to the definition.
-
-## Scripts
-
-| Script          | What it does                                  |
-| --------------- | --------------------------------------------- |
-| `npm run compile` | Type-check + compile `src/` → `out/`        |
-| `npm run watch`   | Incremental compile on change               |
-| `npm test`        | Compile + run unit tests (`node --test`)    |
-| `npm run lint`    | ESLint over `src/`                          |
-
-## How the analysis works (and its limits)
-
-- **App discovery** (`src/analyzer/appDiscovery.ts`): groups `*.py` files by directory;
-  a directory is an app candidate if it has Django marker files, backed by
-  `INSTALLED_APPS` when available. Project config packages (`settings.py` without
-  `models.py`/`views.py`) are excluded. Confidence (`high`/`medium`/`low`) + reason are
-  shown in the app details.
-- **Parsers** (`parseModels` / `parseViews` / `parseUrls` / `parseSettings`): line-based
-  heuristics. Known limits: dynamically built `urlpatterns` (loops, `+ static(...)`),
-  string-referenced views (`"myapp.views.x"`), viewsets/routers, abstract/proxy models,
-  and multi-line model field calls split across lines may be missed or marked uncertain —
-  these surface as warnings in the details panel instead of failing.
-- **Graph** (`graphBuilder.ts`): pure function `buildProjectMap()` turning parsed data
-  into `{ nodes, edges, warnings, stats }`; covered by unit tests in `src/test/`.
-- **Messages** between host and webview are strictly typed
-  (`src/shared/messages.ts`); the webview validates incoming payloads by `type`.
-- The webview (`media/map.js`, vanilla JS, zero runtime dependencies) renders layered
-  SVG columns and uses a strict CSP (`script-src` nonce-only, no inline styles/scripts).
-
-## Layout
+Press <kbd>F5</kbd> (**Run Extension**) to try it in an Extension Development Host.
 
 ```
 src/
-  extension.ts            activation, commands, panel + sidebar providers
-  shared/                 graphTypes + webview/host message types
-  analyzer/               pure static analysis (no vscode dep except analyzeWorkspace.ts)
-  test/                   node:test unit tests (24 cases)
-media/
-  map.js / sidebar.js / style.css / icon.svg
+  extension.ts      activates every module
+  cli.ts            the project CLI (scaffold | context | guard | report | doctor)
+  studio/           Home view, setup, status and score, shared paths
+  map/ analyzer/ shared/   Project Map and the Django static analyzer
+  skillsDashboard/  Skills view
+  scaffold/ context/ guard/ report/   the agent tools (pure core + cli.ts + ui.ts)
+media/              webview assets (map, skills, studio Home)
+agent-kit/skills/   skills installed into projects
+ci/                 the guardrails workflow template (embedded at build time)
 ```
+
+---
+
+## بالعربي باختصار
+
+إضافة وحدة فيها كل شي لبناء مشروع Django مع الوكلاء (Claude وCodex وCopilot):
+- 🏠 صفحة رئيسية فيها نسبة صحة المشروع، ومهمة تجهيز بمستويات، وأوسمة، واحتفال لما يصير كل شي أخضر.
+- 🗺️ خريطة المشروع.
+- 🧠 المهارات.
+- 🧬 أقسام جديدة من القالب المعتمد.
+- 📜 قواعد موحّدة لكل الوكلاء.
+- 🛡️ حماية الـ migrations.
+- 📋 تقرير صفحة وحدة لكل فرع.
+
+اضغط **Set Up Project** مرة وحدة، وارفع `.agent-studio/` على git، وخلّي الوكلاء يشتغلوا.
 
 ## License
 
