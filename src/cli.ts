@@ -5,9 +5,13 @@ import * as path from "path";
 import { main as contextMain } from "./context/cli";
 import { STUDIO_VERSION } from "./generated/version";
 import { main as guardMain } from "./guard/cli";
+import { codexCommand, installMcpConfig } from "./mcp/config";
+import { serve } from "./mcp/server";
+import { main as memoryMain } from "./memory/cli";
 import { main as reportMain } from "./report/cli";
 import { main as scaffoldMain } from "./scaffold/cli";
-import { CLI, RULES_FILE, SCAFFOLD_CONFIG } from "./studio/paths";
+import { main as tasksMain } from "./tasks/cli";
+import { CLI, RULES_FILE, SCAFFOLD_CONFIG, TOOL_DIR } from "./studio/paths";
 import { Io, runCaptured } from "./studio/run";
 
 const USAGE = `🤖 Django Agent Studio ${STUDIO_VERSION}
@@ -16,7 +20,10 @@ Usage (run from anywhere inside the project):
   ${CLI} scaffold <new|check|apps|reference> ...   Create apps by cloning the approved reference app
   ${CLI} context  <sync|check|print|init|install-ci> Keep CLAUDE.md, AGENTS.md and Copilot instructions in sync
   ${CLI} guard    <check|rules> ...                 Static safety checks for Django migrations
+  ${CLI} memory   <add|list|search|show|outdated>   Shared project memory for every agent and session
+  ${CLI} tasks    <list|show|new> ...               Ready-made agent tasks (security audit, tests, ...)
   ${CLI} report   [--base <ref>] ...                One-page review of the current branch
+  ${CLI} mcp      [install]                         MCP server for agents (stdio), or register it
   ${CLI} doctor   [--base <ref>]                    Run every check; exit 1 if any fails
   ${CLI} version
 
@@ -83,6 +90,32 @@ function doctor(argv: readonly string[], io: Io): number {
   return failed === 0 ? 0 : 1;
 }
 
+/** `mcp`: serve over stdio. `mcp install`: register the server for Claude Code and VS Code. */
+function mcp(argv: readonly string[], io: Io): number {
+  // Installed as <project>/.agent-studio/tool/cli.js: the project is two levels up, whatever the cwd.
+  const toolDir = path.join(...TOOL_DIR.split("/"));
+  const root = path.resolve(__dirname).endsWith(path.sep + toolDir) ? path.resolve(__dirname, "..", "..") : findRoot(io.cwd);
+  const [sub] = argv;
+  if (sub === undefined) {
+    void serve(root);
+    return 0;
+  }
+  if (sub === "install" || sub === "check") {
+    const results = installMcpConfig(root, { check: sub === "check" });
+    for (const r of results) {
+      io.out(`${r.status === "skipped" ? "⚠️" : "✅"} ${r.agent}: ${r.path} ${r.status}${r.detail ? ` (${r.detail})` : ""}`);
+    }
+    io.out(`\nCodex CLI: run once on your machine:\n  ${codexCommand(root)}`);
+    return sub === "check" && results.some((r) => r.status !== "unchanged") ? 1 : 0;
+  }
+  if (sub === "--help" || sub === "help") {
+    io.out(`${CLI} mcp            Serve MCP over stdio (agents start this themselves)\n${CLI} mcp install    Register it in .mcp.json (Claude Code) and .vscode/mcp.json (VS Code / Copilot)\n${CLI} mcp check      Exit 1 when the registration is missing or stale`);
+    return 0;
+  }
+  io.err(`error: unknown mcp command "${sub}"`);
+  return 2;
+}
+
 function findRoot(cwd: string): string {
   let dir = path.resolve(cwd);
   for (;;) {
@@ -106,6 +139,12 @@ export function main(argv: readonly string[], io: Io): number {
       return contextMain(rest, io);
     case "guard":
       return guardMain(rest, io);
+    case "memory":
+      return memoryMain(rest, io);
+    case "mcp":
+      return mcp(rest, io);
+    case "tasks":
+      return tasksMain(rest, io);
     case "report":
       return reportMain(argv, io);
     case "doctor":

@@ -20,10 +20,19 @@ const ALLOWED_COMMANDS = new Set([
   "agentStudio.copyReport",
   "agentStudio.openMap",
   "agentStudio.openSkills",
+  "agentStudio.addMemory",
+  "agentStudio.browseMemory",
+  "agentStudio.runTask",
+  "agentStudio.newTask",
 ]);
 
 type Lang = "en" | "ar";
-type FromWebview = { type: "ready" } | { type: "refresh" } | { type: "run"; command: string } | { type: "lang"; lang: Lang };
+type FromWebview =
+  | { type: "ready" }
+  | { type: "refresh" }
+  | { type: "run"; command: string }
+  | { type: "task"; id: string }
+  | { type: "lang"; lang: Lang };
 
 function isFromWebview(m: unknown): m is FromWebview {
   if (typeof m !== "object" || m === null) {
@@ -35,6 +44,10 @@ function isFromWebview(m: unknown): m is FromWebview {
   }
   if (t === "run") {
     return typeof (m as { command?: unknown }).command === "string";
+  }
+  if (t === "task") {
+    const id = (m as { id?: unknown }).id;
+    return typeof id === "string" && /^[a-z0-9][a-z0-9-]{0,63}$/.test(id);
   }
   return t === "lang" && ((m as { lang?: unknown }).lang === "en" || (m as { lang?: unknown }).lang === "ar");
 }
@@ -88,6 +101,8 @@ export class HomeViewProvider implements vscode.WebviewViewProvider {
     } else if (m.type === "lang") {
       await this.context.globalState.update("agentStudio.lang", m.lang);
       this.refreshSoon(0);
+    } else if (m.type === "task") {
+      await vscode.commands.executeCommand("agentStudio.runTask", m.id);
     } else if (m.type === "run" && ALLOWED_COMMANDS.has(m.command)) {
       try {
         await vscode.commands.executeCommand(m.command);

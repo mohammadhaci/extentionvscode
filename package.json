@@ -2,7 +2,7 @@
   "name": "django-agent-studio",
   "displayName": "Django Agent Studio",
   "description": "Build a Django project with coding agents, safely: project map, skills, app scaffolding from your approved template, synced agent instructions, migration guardrails and one-page change reports, all in one place.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "django-agent-studio",
   "license": "MIT",
   "repository": {
@@ -18,16 +18,18 @@
     "Other"
   ],
   "keywords": [
-    "django",
-    "python",
+    "AGENTS.md",
     "agents",
     "claude",
     "codex",
     "copilot",
+    "django",
+    "memory",
     "migrations",
+    "python",
     "scaffold",
-    "AGENTS.md",
-    "skills"
+    "skills",
+    "prompts"
   ],
   "activationEvents": [
     "workspaceContains:manage.py",
@@ -126,6 +128,29 @@
         "title": "Copy Change Report (for PR Description)",
         "category": "Agent Studio",
         "icon": "$(copy)"
+      },
+      {
+        "command": "agentStudio.addMemory",
+        "title": "Add to Project Memory",
+        "category": "Agent Studio",
+        "icon": "$(add)"
+      },
+      {
+        "command": "agentStudio.browseMemory",
+        "title": "Browse Project Memory",
+        "category": "Agent Studio",
+        "icon": "$(library)"
+      },
+      {
+        "command": "agentStudio.runTask",
+        "title": "Give an Agent a Task…",
+        "category": "Agent Studio",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "agentStudio.newTask",
+        "title": "New Custom Agent Task",
+        "category": "Agent Studio"
       }
     ],
     "viewsContainers": {
@@ -159,6 +184,11 @@
     },
     "menus": {
       "view/title": [
+        {
+          "command": "agentStudio.runTask",
+          "when": "view == agentStudio.home",
+          "group": "navigation@0"
+        },
         {
           "command": "agentStudio.setup",
           "when": "view == agentStudio.home",
@@ -200,6 +230,11 @@
           "command": "agentStudio.setReference",
           "when": "explorerResourceIsFolder",
           "group": "2_workspace@11"
+        },
+        {
+          "command": "agentStudio.runTask",
+          "when": "explorerResourceIsFolder",
+          "group": "2_workspace@12"
         }
       ],
       "commandPalette": [
@@ -254,6 +289,37 @@
           "type": "string",
           "default": "",
           "description": "Git ref the change report compares with. Empty: the closest of origin/main, origin/master, main or master."
+        },
+        "agentStudio.taskTarget": {
+          "type": "string",
+          "enum": [
+            "ask",
+            "claude",
+            "codex",
+            "copilot",
+            "clipboard",
+            "file"
+          ],
+          "default": "ask",
+          "enumDescriptions": [
+            "Ask every time",
+            "Claude Code in a terminal",
+            "Codex CLI in a terminal",
+            "Copilot Chat in agent mode",
+            "Copy the prompt",
+            "Open the prompt as a file"
+          ],
+          "description": "Where agent tasks are sent."
+        },
+        "agentStudio.claudeCommand": {
+          "type": "string",
+          "default": "claude",
+          "description": "Command that starts Claude Code in a terminal, for agent tasks."
+        },
+        "agentStudio.codexCommand": {
+          "type": "string",
+          "default": "codex",
+          "description": "Command that starts Codex CLI in a terminal, for agent tasks."
         }
       }
     },

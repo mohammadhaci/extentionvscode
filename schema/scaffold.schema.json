@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Django App Scaffolder settings",
+  "title": "Django Agent Studio: app scaffolding",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -14,13 +14,17 @@
     },
     "exclude": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "description": "Globs relative to the reference app that are never copied (migrations and __pycache__ are always skipped)."
     },
     "requiredFiles": {
       "type": "array",
-      "items": { "type": "string" },
-      "description": "Files every app must have, checked by \"Check Apps Against Reference\". Defaults to the reference app's Python files."
+      "items": {
+        "type": "string"
+      },
+      "description": "Files every checked app must have. Defaults to the reference app's skeleton: its standard Django modules (models.py, views.py, urls.py, \u2026) and package folders (services/, tests/, \u2026)."
     },
     "registerInSettings": {
       "type": "boolean",
@@ -31,6 +35,18 @@
       "type": "boolean",
       "default": true,
       "description": "Duplicate the reference app's include() entry in URLconfs."
+    },
+    "apps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Apps created from the reference app. \"New App from Reference\" adds them automatically; the structure check covers these."
+    },
+    "checkAllApps": {
+      "type": "boolean",
+      "default": false,
+      "description": "Also check apps that existed before the studio against the reference skeleton."
     }
   }
 }

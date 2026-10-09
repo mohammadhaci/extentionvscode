@@ -10,7 +10,7 @@ export interface Quest {
 }
 
 export interface Badge {
-  id: "clean-migrations" | "template-keeper" | "in-sync" | "skilled" | "guarded" | "green-branch" | "all-star";
+  id: "clean-migrations" | "template-keeper" | "in-sync" | "skilled" | "guarded" | "green-branch" | "elephant" | "all-star";
   earned: boolean;
 }
 
@@ -28,7 +28,7 @@ export function questsOf(s: StudioStatus): Quest[] {
     { id: "tool", done: s.tool.installed && !s.tool.outdated, action: "agentStudio.setup" },
     { id: "reference", done: s.scaffold.state !== "off", action: "agentStudio.setReference" },
     { id: "rules", done: s.context.state !== "off", action: "agentStudio.openRules" },
-    { id: "skills", done: s.skills.missing.length === 0, action: "agentStudio.setup" },
+    { id: "skills", done: s.skills.missing.length === 0 && s.mcp !== false, action: "agentStudio.setup" },
     { id: "ci", done: s.ci === "installed", action: "agentStudio.setup" },
     {
       id: "green",
@@ -76,6 +76,7 @@ export function scoreOf(s: StudioStatus): Score {
     { id: "skilled", earned: s.skills.missing.length === 0 },
     { id: "guarded", earned: s.ci === "installed" },
     { id: "green-branch", earned: s.report.verdict === "green" && s.report.commits > 0 },
+    { id: "elephant", earned: s.memory.active >= 5 },
     { id: "all-star", earned: health >= 100 },
   ];
 

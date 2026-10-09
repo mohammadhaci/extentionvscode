@@ -8,8 +8,12 @@ export interface ScaffoldConfig {
   referenceEntity?: string;
   /** Extra globs (relative to the reference app) that are never copied. */
   exclude?: string[];
-  /** Files every app must contain; used by the conformance check instead of the reference file list. */
+  /** Files every checked app must contain; replaces the default skeleton taken from the reference app. */
   requiredFiles?: string[];
+  /** Apps created from the reference (added automatically by "new"); the structure check covers these. */
+  apps?: string[];
+  /** Also check apps that existed before the studio. Default false. */
+  checkAllApps?: boolean;
   /** Add the new app to INSTALLED_APPS-style lists. Default true. */
   registerInSettings?: boolean;
   /** Duplicate the reference app's URL include. Default true. */
@@ -96,6 +100,8 @@ export function parseConfig(text: string): { config: ScaffoldConfig; errors: str
   config.requiredFiles = strList("requiredFiles");
   config.registerInSettings = bool("registerInSettings");
   config.registerInUrls = bool("registerInUrls");
+  config.apps = strList("apps");
+  config.checkAllApps = bool("checkAllApps");
   for (const key of Object.keys(config) as (keyof ScaffoldConfig)[]) {
     if (config[key] === undefined) {
       delete config[key];
@@ -115,5 +121,20 @@ export function withReferenceApp(existingText: string | undefined, referenceApp:
     obj = parsed as Record<string, unknown>;
   }
   obj.referenceApp = referenceApp;
+  return JSON.stringify(obj, null, 2) + "\n";
+}
+
+/** Returns the config file text with `dir` added to `apps`, keeping every other key. */
+export function withScaffoldedApp(existingText: string | undefined, dir: string): string {
+  let obj: Record<string, unknown> = {};
+  if (existingText !== undefined && existingText.trim()) {
+    const parsed: unknown = JSON.parse(existingText);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      throw new Error(`${CONFIG_FILE} must contain a JSON object.`);
+    }
+    obj = parsed as Record<string, unknown>;
+  }
+  const apps = Array.isArray(obj.apps) ? obj.apps.filter((a): a is string => typeof a === "string") : [];
+  obj.apps = [...new Set([...apps, dir])].sort();
   return JSON.stringify(obj, null, 2) + "\n";
 }

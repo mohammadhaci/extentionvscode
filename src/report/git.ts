@@ -125,6 +125,15 @@ export function changedFiles(root: string, range: Range): ChangedFile[] {
   return [...files.values()].sort((x, y) => x.path.localeCompare(y.path));
 }
 
+/** A project file's content at the merge base, or undefined when it did not exist. */
+export function fileAtBase(range: Range, rel: string): string | undefined {
+  try {
+    return git(range.top, ["show", `${range.mergeBase}:${range.prefix ? `${range.prefix}/` : ""}${rel}`]);
+  } catch {
+    return undefined;
+  }
+}
+
 export function commits(range: Range, limit = 30): { sha: string; subject: string }[] {
   const out = git(range.top, ["log", "--format=%h%x09%s", `-${limit}`, `${range.mergeBase}..HEAD`]);
   return out.split("\n").filter(Boolean).map((l) => ({ sha: l.split("\t")[0], subject: l.slice(l.indexOf("\t") + 1) }));

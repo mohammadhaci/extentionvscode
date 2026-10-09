@@ -23,6 +23,9 @@ const base: StudioStatus = {
   context: { state: "off", stale: [] },
   guard: { state: "pass", errors: 0, warnings: 0 },
   report: { state: "pass", verdict: "green", files: 0, commits: 0 },
+  memory: { active: 0 },
+  mcp: false,
+  tasks: [],
 };
 const allSet: StudioStatus = {
   ...base,
@@ -32,6 +35,8 @@ const allSet: StudioStatus = {
   scaffold: { state: "pass", reference: "apps/orders", ok: 3, total: 3 },
   context: { state: "pass", stale: [] },
   report: { state: "pass", verdict: "green", files: 2, commits: 1 },
+  memory: { active: 5, latest: "RFQ loops are versioned" },
+  mcp: true,
 };
 
 describe("score", () => {
@@ -100,7 +105,7 @@ describe("install", () => {
   it("sets up a project whose CLI runs standalone, even under type: module", () => {
     const r = setUpProject(EXT_ROOT, root, { ci: "force" });
     assert.ok(r.toolFiles > 20);
-    assert.equal(r.skills.length, 9);
+    assert.equal(r.skills.length, 12);
     assert.equal(r.rulesCreated, true);
     assert.equal(r.ci, "created");
     assert.equal(installedToolVersion(root), STUDIO_VERSION);

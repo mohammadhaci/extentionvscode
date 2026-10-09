@@ -32,9 +32,13 @@ const RULES: Rule[] = [
     title: "Agent guardrails or tooling changed",
     why: "Agents must not edit the tools, skills, CI or settings that check their own work. Confirm a human asked for this.",
     match: (p) =>
-      /^\.agent-studio\//.test(p) ||
+      // Project memory is meant to be written by agents, and tasks are prompts, not checks;
+      // everything else in .agent-studio/ is guardrails.
+      (/^\.agent-studio\//.test(p) && !/^\.agent-studio\/(memory|tasks|runs)\//.test(p)) ||
       /^\.(claude|agents|github)\/skills\//.test(p) ||
-      /^\.github\/workflows\//.test(p),
+      /^\.github\/workflows\//.test(p) ||
+      p === ".mcp.json" ||
+      p === ".vscode/mcp.json",
   },
   {
     level: "red",
@@ -86,10 +90,34 @@ const RULES: Rule[] = [
 export const isTestPath = (p: string): boolean => /(^|\/)(tests?\.py|tests?\/|test_[^/]*\.py$|[^/]*_tests?\.py$|conftest\.py$)/.test(p);
 const isMigration = (p: string): boolean => /(^|\/)migrations\//.test(p);
 
-export function findRisks(files: readonly ChangedFile[], appDirs: readonly string[]): Risk[] {
+/** Files "Set Up Project" (re)writes: the CLI, the studio skills and the guardrails workflow. */
+const isStudioInstall = (p: string): boolean =>
+  /^\.agent-studio\/tool\//.test(p) || /^\.(claude|agents|github)\/skills\//.test(p) || p === ".github/workflows/agent-guardrails.yml" || p === ".mcp.json" || p === ".vscode/mcp.json";
+
+export interface RiskOptions {
+  /** Set when the installed tool's version changed on the branch (a studio update). */
+  studioUpdate?: { from?: string; to: string };
+}
+
+export function findRisks(files: readonly ChangedFile[], appDirs: readonly string[], options: RiskOptions = {}): Risk[] {
   const risks: Risk[] = [];
   for (const rule of RULES) {
-    const hits = files.filter((f) => rule.match(f.path, f)).map((f) => f.path).sort();
+    let hits = files.filter((f) => rule.match(f.path, f)).map((f) => f.path).sort();
+    // A version bump of the tool means Set Up Project reinstalled the studio: still worth a
+    // look, but not a red flag. Rules and settings edits stay red either way.
+    if (rule.title === RULES[0].title && options.studioUpdate) {
+      const installed = hits.filter(isStudioInstall);
+      hits = hits.filter((h) => !isStudioInstall(h));
+      if (installed.length > 0) {
+        const u = options.studioUpdate;
+        risks.push({
+          level: "yellow",
+          title: `Agent Studio updated${u.from ? ` from v${u.from}` : ""} to v${u.to}`,
+          why: "The tool, skills or CI workflow were reinstalled by Set Up Project. Make sure a human did this.",
+          files: installed,
+        });
+      }
+    }
     if (hits.length > 0) {
       risks.push({ level: rule.level, title: rule.title, why: rule.why, files: hits });
     }

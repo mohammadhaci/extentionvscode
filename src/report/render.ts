@@ -16,6 +16,8 @@ export interface Report {
   risks: Risk[];
   tools: ToolResult[];
   verdict: Verdict;
+  /** Project memory entries added or changed on the branch. */
+  memories?: { title: string; type: string; path: string; status: string; change: "added" | "modified" }[];
 }
 
 /** Turns a project path (and optional line) into Markdown; the CLI and VS Code differ. */
@@ -127,6 +129,14 @@ export function renderReport(r: Report, link: LinkFn = plainLink): string {
   const migrations = r.files.filter((f) => f.status === "added" && /(^|\/)migrations\/(?!__init__\.py$)[^/]+\.py$/.test(f.path));
   if (migrations.length > 0) {
     out.push("**New migrations**", "", ...migrations.map((f) => `- ${link(f.path)}`), "");
+  }
+  if (r.memories && r.memories.length > 0) {
+    out.push(
+      "**Project memory**",
+      "",
+      ...r.memories.map((m) => `- ${m.change === "added" ? "➕" : "✏️"} ${m.type}: ${m.title}${m.status === "outdated" ? " (marked outdated)" : ""} (${link(m.path)})`),
+      ""
+    );
   }
 
   if (r.tools.length > 0) {

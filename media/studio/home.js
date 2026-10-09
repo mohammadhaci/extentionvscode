@@ -31,10 +31,13 @@
         tool: ["Install the studio", "CLI and skills agents use, in .agent-studio/"],
         reference: ["Pick your reference app", "The approved app every new app is cloned from"],
         rules: ["Write the agent rules", "One file for Claude, Codex and Copilot"],
-        skills: ["Teach your agents", "Studio skills in every agent's skill folder"],
+        skills: ["Teach your agents", "Studio skills and the MCP server for every agent"],
         ci: ["Guard every pull request", "GitHub Actions runs every check"],
         green: ["Go all green", "Every check passes on this branch"]
       },
+      tasks: "Agent tasks",
+      tasksHint: "One click gives an agent a ready-made task with your project's context, rules and memory.",
+      newTask: "＋ Custom task",
       tools: "Your tools",
       cards: {
         map: "Project map",
@@ -42,12 +45,19 @@
         context: "Agent rules",
         guard: "Migrations",
         report: "Change report",
-        skills: "Skills"
+        skills: "Skills",
+        memory: "Project memory",
+        mcp: "MCP server"
       },
+      memoryLine: "{n} memories every agent shares · latest: {latest}",
+      memoryEmpty: "Nothing remembered yet. Save what agents should never have to ask again.",
+      mcpOn: "Claude Code and Copilot can use the studio's tools: map, memory, checks, tasks",
+      mcpOff: "Give agents direct access to the map, memory, checks and tasks",
       appsModels: "{apps} apps · {models} models",
       noDjango: "No Django project detected",
       refApp: "Reference: {ref}",
       matching: "{ok} / {total} apps match the template",
+      noneCreated: "No apps created from it yet",
       noRef: "No reference app yet",
       inSync: "CLAUDE.md, AGENTS.md and Copilot are in sync",
       stale: "Stale: {files}",
@@ -61,7 +71,8 @@
       pill: { pass: "OK", fail: "Fix", warn: "Check", off: "Off", info: "Info", red: "Red", yellow: "Review", green: "Green" },
       a: {
         openMap: "Open map", newApp: "New app", setRef: "Set reference", check: "Check",
-        sync: "Sync", rules: "Rules", show: "Show", copy: "Copy", skills: "Browse", setup: "Set up"
+        sync: "Sync", rules: "Rules", show: "Show", copy: "Copy", skills: "Browse", setup: "Set up",
+        remember: "Remember", browse: "Browse"
       },
       badges: "Badges",
       badgeCount: "{n} / {total}",
@@ -72,6 +83,7 @@
         skilled: ["🧠", "Skilled: every agent has the studio skills"],
         guarded: ["🛡️", "Guarded: CI checks every pull request"],
         "green-branch": ["🌿", "Green branch: this branch's report is green"],
+        elephant: ["🐘", "Elephant memory: 5+ shared memories"],
         "all-star": ["🏆", "All-star: 100% health"]
       },
       refresh: "Refresh",
@@ -100,10 +112,13 @@
         tool: ["ثبّت الاستوديو", "الأداة والمهارات اللي بيستعملها الوكلاء، بـ \u2068.agent-studio/\u2069"],
         reference: ["اختار القسم المرجعي", "القسم المعتمد اللي بيتنسخ منه كل قسم جديد"],
         rules: ["اكتب قواعد الوكلاء", "ملف واحد لـ Claude وCodex وCopilot"],
-        skills: ["علّم وكلاءك", "مهارات الاستوديو بمجلد كل وكيل"],
+        skills: ["علّم وكلاءك", "مهارات الاستوديو وسيرفر MCP لكل وكيل"],
         ci: ["احمي كل PR", "GitHub Actions بيشغّل كل الفحوصات"],
         green: ["خلّي كل شي أخضر", "كل الفحوصات ناجحة على هالفرع"]
       },
+      tasks: "مهام الوكلاء",
+      tasksHint: "كبسة وحدة بتعطي الوكيل مهمة جاهزة مع معلومات مشروعك وقواعده وذاكرته.",
+      newTask: "＋ مهمة خاصة",
       tools: "أدواتك",
       cards: {
         map: "خريطة المشروع",
@@ -111,12 +126,19 @@
         context: "قواعد الوكلاء",
         guard: "الـ Migrations",
         report: "تقرير التغييرات",
-        skills: "المهارات"
+        skills: "المهارات",
+        memory: "ذاكرة المشروع",
+        mcp: "سيرفر MCP"
       },
+      memoryLine: "{n} ذكريات مشتركة بين كل الوكلاء · آخرها: {latest}",
+      memoryEmpty: "لسا ما في شي محفوظ. احفظ اللي ما بدك تعيد شرحه للوكلاء.",
+      mcpOn: "Claude Code وCopilot بيقدروا يستعملوا أدوات الاستوديو: الخريطة والذاكرة والفحوصات والمهام",
+      mcpOff: "خلّي الوكلاء يوصلوا مباشرة للخريطة والذاكرة والفحوصات والمهام",
       appsModels: "{apps} أقسام · {models} models",
       noDjango: "ما لقيت مشروع Django",
       refApp: "المرجع: {ref}",
       matching: "{ok} من {total} أقسام مطابقة للقالب",
+      noneCreated: "لسا ما انعمل منه أي قسم",
       noRef: "لسا ما في قسم مرجعي",
       inSync: "CLAUDE.md وAGENTS.md وCopilot متزامنين",
       stale: "قديمة: {files}",
@@ -130,7 +152,8 @@
       pill: { pass: "تمام", fail: "صلّح", warn: "راجع", off: "مطفي", info: "معلومة", red: "أحمر", yellow: "راجع", green: "أخضر" },
       a: {
         openMap: "افتح الخريطة", newApp: "قسم جديد", setRef: "حدّد المرجع", check: "افحص",
-        sync: "زامن", rules: "القواعد", show: "اعرض", copy: "انسخ", skills: "تصفّح", setup: "جهّز"
+        sync: "زامن", rules: "القواعد", show: "اعرض", copy: "انسخ", skills: "تصفّح", setup: "جهّز",
+        remember: "احفظ", browse: "تصفّح"
       },
       badges: "الأوسمة",
       badgeCount: "{n} / {total}",
@@ -141,6 +164,7 @@
         skilled: ["🧠", "متمكّن: كل وكيل عنده مهارات الاستوديو"],
         guarded: ["🛡️", "محمي: الـ CI بيفحص كل PR"],
         "green-branch": ["🌿", "فرع أخضر: تقرير هالفرع أخضر"],
+        elephant: ["🐘", "ذاكرة فيل: 5 ذكريات مشتركة أو أكتر"],
         "all-star": ["🏆", "نجم: صحة 100%"]
       },
       refresh: "تحديث",
@@ -335,6 +359,22 @@
     });
     app.appendChild(quest);
 
+    // Agent tasks
+    var tasks = s.tasks || [];
+    if (tasks.length) {
+      app.appendChild(el("div", { class: "section-title" }, el("span", { text: "🎯 " + t.tasks })));
+      app.appendChild(el("div", { class: "hint", text: t.tasksHint }));
+      app.appendChild(el("div", { class: "tasks" },
+        tasks.map(function (task) {
+          return el("button", {
+            class: "task" + (task.custom ? " custom" : ""),
+            title: task.title,
+            onclick: function () { vscode.postMessage({ type: "task", id: task.id }); }
+          }, el("span", { class: "task-icon", text: task.icon }), el("span", { class: "task-name", text: (lang === "ar" && task.titleAr) || task.title }));
+        }),
+        el("button", { class: "task ghost new", text: t.newTask, onclick: function () { run("agentStudio.newTask"); } })));
+    }
+
     // Tool cards
     app.appendChild(el("div", { class: "section-title" }, el("span", { text: "🧰 " + t.tools })));
     var cards = el("div", { class: "cards" });
@@ -349,7 +389,7 @@
       t.pill[sc0.state === "error" ? "warn" : sc0.state],
       sc0.state === "off" ? t.noRef : el("span", null,
         el("span", { text: fmt(t.refApp, { ref: "" }) }), el("code", { text: sc0.reference || "" }),
-        el("br"), el("span", { text: fmt(t.matching, { ok: sc0.ok, total: sc0.total }) })),
+        el("br"), el("span", { text: sc0.total === 0 ? t.noneCreated : fmt(t.matching, { ok: sc0.ok, total: sc0.total }) })),
       sc0.state === "off" ? [button(t.a.setRef, "agentStudio.setReference")] : [button(t.a.newApp, "agentStudio.newApp"), button(t.a.check, "agentStudio.checkApps", true)]));
 
     var cx = s.context;
@@ -377,6 +417,15 @@
       missing.length ? t.pill.warn : t.pill.pass,
       missing.length ? fmt(t.skillsMissing, { list: missing.join(", ") }) : t.skillsOk,
       missing.length ? [button(t.a.setup, "agentStudio.setup"), button(t.a.skills, "agentStudio.openSkills", true)] : [button(t.a.skills, "agentStudio.openSkills", true)]));
+    var mem = s.memory || { active: 0 };
+    cards.appendChild(card(t, "🐘", t.cards.memory, mem.active > 0 ? "pass" : "info",
+      mem.active > 0 ? String(mem.active) : t.pill.info,
+      mem.active > 0 ? fmt(t.memoryLine, { n: mem.active, latest: mem.latest || "" }) : t.memoryEmpty,
+      [button(t.a.remember, "agentStudio.addMemory"), mem.active > 0 ? button(t.a.browse, "agentStudio.browseMemory", true) : null]));
+    cards.appendChild(card(t, "🔌", t.cards.mcp, s.mcp ? "pass" : "off",
+      s.mcp ? t.pill.pass : t.pill.off,
+      s.mcp ? t.mcpOn : t.mcpOff,
+      s.mcp ? [] : [button(t.a.setup, "agentStudio.setup")]));
     app.appendChild(cards);
 
     // Badges

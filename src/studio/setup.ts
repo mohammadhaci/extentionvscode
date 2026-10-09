@@ -36,6 +36,7 @@ export async function runSetup(context: vscode.ExtensionContext): Promise<boolea
         `• ${RULES_FILE}: one rules file for every agent (kept if it exists)\n` +
         `• ${CI_WORKFLOW_PATH}: guardrails on every pull request` +
         (ciCustomised ? " (yours differs from the template and is kept)" : "") +
+        "\n• .mcp.json and .vscode/mcp.json: the studio's MCP server for Claude Code and Copilot (other servers are kept)" +
         "\n\nNothing outside these paths and the agent instruction files is touched.",
     },
     "Set Up"
@@ -66,6 +67,7 @@ export async function runSetup(context: vscode.ExtensionContext): Promise<boolea
   void vscode.window.showInformationMessage(
     `🎉 Agent Studio is set up: ${result.toolFiles} tool files, ${result.skills.length} skill files, ${synced} instruction file(s) synced` +
       (result.ci === "exists" ? ", CI workflow kept as is" : result.ci === "unchanged" ? "" : `, CI workflow ${result.ci}`) +
+      (result.mcp.some((m) => m.status === "skipped") ? `, MCP config skipped for ${result.mcp.filter((m) => m.status === "skipped").map((m) => m.path).join(", ")} (not plain JSON)` : "") +
       `. Commit ${STUDIO_DIR}/ and the generated files.`
   );
   return true;

@@ -2,6 +2,7 @@
 // rules file and the CI workflow. Node standard library only (testable).
 import * as fs from "fs";
 import * as path from "path";
+import { installMcpConfig, McpInstallResult } from "../mcp/config";
 import { CiInstallStatus, installCiWorkflow } from "../context/ci";
 import { initRules } from "../context/sync";
 import { STUDIO_VERSION } from "../generated/version";
@@ -82,6 +83,7 @@ export interface SetupResult {
   skills: string[];
   rulesCreated: boolean;
   ci: CiInstallStatus | "skipped";
+  mcp: McpInstallResult[];
 }
 
 /** Full project setup. `ci`: "write" keeps a customised workflow, "force" replaces it, "skip" leaves it. */
@@ -94,5 +96,6 @@ export function setUpProject(
   const skills = installSkills(path.join(extensionRoot, "agent-kit"), projectRoot, options.skillRoots);
   const rulesCreated = initRules(projectRoot);
   const ci = options.ci === "skip" ? "skipped" : installCiWorkflow(projectRoot, options.ci === "force");
-  return { toolFiles, skills, rulesCreated, ci };
+  const mcp = installMcpConfig(projectRoot);
+  return { toolFiles, skills, rulesCreated, ci, mcp };
 }

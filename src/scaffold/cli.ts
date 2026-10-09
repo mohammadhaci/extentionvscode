@@ -2,7 +2,7 @@
 // Same core as the VS Code commands; no dependencies beyond Node's standard library.
 import * as fs from "fs";
 import * as path from "path";
-import { CONFIG_FILE, parseConfig, ScaffoldConfig, withReferenceApp } from "./config";
+import { CONFIG_FILE, parseConfig, ScaffoldConfig, withReferenceApp, withScaffoldedApp } from "./config";
 import { formatConformanceReport } from "./conformance";
 import { guessSingular, validateAppName } from "./names";
 import { planFiles, SourceFile } from "./plan";
@@ -238,6 +238,10 @@ function cmdNew(root: string, p: Parsed, io: Io): number {
   for (const [file, { text, edits }] of reg.byFile) {
     fs.writeFileSync(path.join(root, file), applyEdits(text, edits));
   }
+  // Remember the app so the structure check covers it.
+  const configFile = path.join(root, ...CONFIG_FILE.split("/"));
+  fs.mkdirSync(path.dirname(configFile), { recursive: true });
+  fs.writeFileSync(configFile, withScaffoldedApp(fs.existsSync(configFile) ? fs.readFileSync(configFile, "utf8") : undefined, targetDir));
 
   if (p.flags.has("json")) {
     io.out(JSON.stringify({ ...summary, ok: true }, null, 2));
@@ -263,13 +267,13 @@ function cmdCheck(root: string, p: Parsed, io: Io): number {
   const refFiles = [...filesUnder(refDir)];
   const apps = appDirs(projectFiles).map((dir) => ({ dir, files: filesUnder(dir) }));
   const settingsTexts = projectFiles.filter(isSettingsFile).map((f) => readText(root, f));
-  const results = checkConformance(refDir, refFiles, apps, settingsTexts, config);
+  const { results, skipped } = checkConformance(refDir, refFiles, apps, settingsTexts, config);
   const failing = results.filter((r) => r.missing.length > 0 || !r.registered);
   if (p.flags.has("json")) {
-    io.out(JSON.stringify({ reference: refDir, ok: failing.length === 0, apps: results }, null, 2));
+    io.out(JSON.stringify({ reference: refDir, ok: failing.length === 0, apps: results, skipped }, null, 2));
   } else {
-    const source = config.requiredFiles ? `\`requiredFiles\` in ${CONFIG_FILE}` : "the reference app's Python files";
-    io.out(formatConformanceReport(refDir, source, results));
+    const source = config.requiredFiles ? `\`requiredFiles\` in ${CONFIG_FILE}` : "the reference app's skeleton (standard modules and packages)";
+    io.out(formatConformanceReport(refDir, source, results, skipped));
   }
   return failing.length === 0 ? 0 : 1;
 }
