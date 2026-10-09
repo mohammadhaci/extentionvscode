@@ -1,6 +1,7 @@
 // Pure: renders the managed block. Output is deterministic (no timestamps) so
 // `check` can compare it byte for byte.
 import { ProjectSummary } from "./projectMap";
+import { MemoryEntry, TYPE_ICON } from "../memory/memory";
 import { CLI } from "../studio/paths";
 import { RULES_FILE } from "./config";
 
@@ -9,6 +10,34 @@ export const BLOCK_END = "<!-- agent-context:end -->";
 
 export interface RenderOptions {
   maxModelsPerApp: number;
+  /** Active project memory entries; when given, a "Project memory" section is rendered. */
+  memories?: readonly MemoryEntry[];
+}
+
+const MAX_MEMORY_LINES = 40;
+
+export function renderMemory(entries: readonly MemoryEntry[]): string {
+  const out: string[] = [
+    "## Project memory",
+    "",
+    "Shared memory of decisions, gotchas, conventions and project knowledge, for every agent and every session.",
+    `Before starting, read the entries related to your task (search: \`${CLI} memory search <words>\`).`,
+    `When you learn something the next agent should not have to rediscover (a decision, a trap, how something works, how a tricky bug was fixed, or anything the human explained), save it: \`${CLI} memory add --type <decision|gotcha|convention|knowledge|lesson> --title "..." --body "..."\`.`,
+    "",
+  ];
+  const shown = entries.slice(0, MAX_MEMORY_LINES);
+  for (const e of shown) {
+    const tags = e.tags.length ? ` (${e.tags.join(", ")})` : "";
+    out.push(`- ${TYPE_ICON[e.type]} ${e.type}: ${e.title}${tags}: \`${e.path}\``);
+  }
+  if (entries.length > shown.length) {
+    out.push(`- …and ${entries.length - shown.length} more: \`${CLI} memory list\``);
+  }
+  if (entries.length === 0) {
+    out.push("_No entries yet._");
+  }
+  out.push("");
+  return out.join("\n");
 }
 
 const code = (s: string): string => "`" + s.replace(/`/g, "'") + "`";
@@ -81,6 +110,9 @@ export function renderBlock(rules: string | undefined, summary: ProjectSummary |
   }
   if (summary?.isDjango) {
     parts.push(renderProjectMap(summary, opts));
+  }
+  if (opts.memories) {
+    parts.push(renderMemory(opts.memories));
   }
   parts.push(
     `After adding or removing apps, models or URL includes, run \`${CLI} context sync\` so every agent's instructions stay current.`,

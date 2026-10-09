@@ -11,6 +11,7 @@ import { STUDIO_VERSION } from "../generated/version";
 import { main as guardMain } from "../guard/cli";
 import { main as reportMain } from "../report/cli";
 import { main as scaffoldMain } from "../scaffold/cli";
+import { listMemories } from "../memory/memory";
 import { installedToolVersion, missingSkills } from "./install";
 import { RULES_FILE, SCAFFOLD_CONFIG } from "./paths";
 import { runJson } from "./run";
@@ -28,6 +29,7 @@ export interface StudioStatus {
   context: { state: CheckState; stale: string[]; detail?: string };
   guard: { state: CheckState; errors: number; warnings: number; scope?: string; detail?: string };
   report: { state: CheckState; verdict?: "red" | "yellow" | "green"; branch?: string; base?: string; files: number; commits: number; detail?: string };
+  memory: { active: number; latest?: string };
 }
 
 const exists = (root: string, rel: string): boolean => fs.existsSync(path.join(root, ...rel.split("/")));
@@ -91,6 +93,8 @@ export function collectStatus(root: string): StudioStatus {
       : { state: "error", files: 0, commits: 0, detail: error };
   }
 
+  const memories = listMemories(root).filter((m) => m.status === "active");
+
   return {
     folder: path.basename(root),
     django: {
@@ -106,5 +110,6 @@ export function collectStatus(root: string): StudioStatus {
     context,
     guard,
     report,
+    memory: { active: memories.length, latest: memories[0]?.title },
   };
 }

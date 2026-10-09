@@ -7,6 +7,7 @@ import * as vscode from "vscode";
 import { activateContext } from "./context/ui";
 import { activateGuard } from "./guard/ui";
 import { activateMap, deactivateMap } from "./map/ui";
+import { activateMemory } from "./memory/ui";
 import { activateReport } from "./report/ui";
 import { activateScaffold } from "./scaffold/ui";
 import { activateSkills, deactivateSkills } from "./skillsDashboard/ui";
@@ -35,6 +36,7 @@ export function activate(context: vscode.ExtensionContext): void {
   activateContext(context);
   activateGuard(context);
   activateReport(context);
+  activateMemory(context);
 
   // Keep Home current while files that affect it change.
   const watcher = vscode.workspace.createFileSystemWatcher(

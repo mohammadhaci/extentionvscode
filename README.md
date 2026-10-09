@@ -15,6 +15,7 @@ Everything lives behind one **Agent Studio** icon in the Activity Bar:
 | 📜 **Agent rules** | One `rules.md` plus a live project map, synced to `CLAUDE.md`, `AGENTS.md` and Copilot | [context](docs/context.md) |
 | 🛡️ **Migrations** | Static safety checks: data loss, NOT NULL traps, edited or conflicting migrations | [guard](docs/guard.md) |
 | 📋 **Change report** | One-page review of a branch in Django terms, with a red/yellow/green verdict | [report](docs/report.md) |
+| 🐘 **Project memory** | Long-term memory shared by every agent and session: decisions, gotchas, conventions | [memory](docs/memory.md) |
 
 Static analysis only: project code is never executed.
 
@@ -33,7 +34,8 @@ Static analysis only: project code is never executed.
 
 From then on, ask any agent for *"a new invoices section"*. Its skills make it clone the
 reference app, build the feature the same way, check the migrations and structure, refresh
-every agent's instructions, and hand over a change report.
+every agent's instructions, and hand over a change report. What they learn on the way goes
+into the project memory, so the next agent (or the next session) starts from it.
 
 ## Home
 
@@ -43,7 +45,7 @@ every agent's instructions, and hand over a change report.
   step has a *Do it* button.
 - **Tool cards**: live state and one-click actions for every tool.
 - **Badges**: 🧹 clean migrations, 🧬 template keeper, 🔗 in sync, 🧠 skilled, 🛡️ guarded,
-  🌿 green branch, 🏆 all-star.
+  🌿 green branch, 🐘 elephant memory, 🏆 all-star.
 - **English / عربي**, with right-to-left layout. Follows your theme; animations respect
   *reduce motion*.
 
@@ -56,6 +58,8 @@ node .agent-studio/tool/cli.js scaffold new invoices --entity Invoice   # clone 
 node .agent-studio/tool/cli.js context sync                             # refresh CLAUDE.md / AGENTS.md / Copilot
 node .agent-studio/tool/cli.js guard check --base origin/main           # migration safety
 node .agent-studio/tool/cli.js report                                   # one-page branch review
+node .agent-studio/tool/cli.js memory search celery                     # what the project already knows
+node .agent-studio/tool/cli.js memory add --type gotcha --title "…"     # remember something for every agent
 node .agent-studio/tool/cli.js doctor                                   # every check, one summary
 ```
 
@@ -70,6 +74,7 @@ Project layout:
   rules.md         agent rules: the single source for every agent
   scaffold.json    reference app and scaffolding options (JSON schema in the editor)
   context.json     optional: instruction targets and project map options
+  memory/          project memory: one Markdown file per fact, written by agents and humans
 ```
 
 ## Settings
@@ -86,7 +91,7 @@ Project layout:
 
 ```sh
 npm install
-npm test          # generate + compile + 272 node:test tests
+npm test          # generate + compile + 282 node:test tests
 npm run lint
 npm run package   # -> django-agent-studio-0.2.1.vsix
 ```
@@ -96,11 +101,11 @@ Press <kbd>F5</kbd> (**Run Extension**) to try it in an Extension Development Ho
 ```
 src/
   extension.ts      activates every module
-  cli.ts            the project CLI (scaffold | context | guard | report | doctor)
+  cli.ts            the project CLI (scaffold | context | guard | memory | report | doctor)
   studio/           Home view, setup, status and score, shared paths
   map/ analyzer/ shared/   Project Map and the Django static analyzer
   skillsDashboard/  Skills view
-  scaffold/ context/ guard/ report/   the agent tools (pure core + cli.ts + ui.ts)
+  scaffold/ context/ guard/ report/ memory/   the agent tools (pure core + cli.ts + ui.ts)
 media/              webview assets (map, skills, studio Home)
 agent-kit/skills/   skills installed into projects
 ci/                 the guardrails workflow template (embedded at build time)
@@ -118,6 +123,7 @@ ci/                 the guardrails workflow template (embedded at build time)
 - 📜 قواعد موحّدة لكل الوكلاء.
 - 🛡️ حماية الـ migrations.
 - 📋 تقرير صفحة وحدة لكل فرع.
+- 🐘 ذاكرة مشتركة للمشروع: أي وكيل أو جلسة جديدة بتعرف القرارات والمطبات والاتفاقيات بدون ما تشرحها من جديد.
 
 اضغط **Set Up Project** مرة وحدة، وارفع `.agent-studio/` على git، وخلّي الوكلاء يشتغلوا.
 

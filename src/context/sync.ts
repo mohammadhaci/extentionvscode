@@ -7,6 +7,7 @@ import { CONFIG_FILE, ContextConfig, DEFAULT_CONFIG, parseContextConfig, RULES_F
 import { upsertBlock } from "./managedBlock";
 import { ProjectSummary, SourceText, summarizeProject } from "./projectMap";
 import { renderBlock } from "./render";
+import { listMemories } from "../memory/memory";
 
 const SKIP_DIRS = new Set(["node_modules", "venv", "env", "site-packages", "__pycache__", "migrations", "dist", "build", "staticfiles", "media"]);
 const MAX_PY_FILES = 20_000;
@@ -115,7 +116,8 @@ export function syncProject(root: string, options: { check?: boolean } = {}): Sy
     warnings.push(`${RULES_FILE} not found; only the project map is synced. Run "init" to create it.`);
   }
   const summary = config.projectMap ? summarizeProject(scanPython(root, warnings), scaffoldReference(root)) : undefined;
-  const block = renderBlock(rules, summary, { maxModelsPerApp: config.maxModelsPerApp });
+  const memories = listMemories(root).filter((m) => m.status === "active");
+  const block = renderBlock(rules, summary, { maxModelsPerApp: config.maxModelsPerApp, memories });
 
   const results: TargetResult[] = config.targets.map((target) => {
     const file = path.join(root, target);

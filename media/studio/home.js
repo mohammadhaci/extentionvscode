@@ -42,8 +42,11 @@
         context: "Agent rules",
         guard: "Migrations",
         report: "Change report",
-        skills: "Skills"
+        skills: "Skills",
+        memory: "Project memory"
       },
+      memoryLine: "{n} memories every agent shares · latest: {latest}",
+      memoryEmpty: "Nothing remembered yet. Save what agents should never have to ask again.",
       appsModels: "{apps} apps · {models} models",
       noDjango: "No Django project detected",
       refApp: "Reference: {ref}",
@@ -62,7 +65,8 @@
       pill: { pass: "OK", fail: "Fix", warn: "Check", off: "Off", info: "Info", red: "Red", yellow: "Review", green: "Green" },
       a: {
         openMap: "Open map", newApp: "New app", setRef: "Set reference", check: "Check",
-        sync: "Sync", rules: "Rules", show: "Show", copy: "Copy", skills: "Browse", setup: "Set up"
+        sync: "Sync", rules: "Rules", show: "Show", copy: "Copy", skills: "Browse", setup: "Set up",
+        remember: "Remember", browse: "Browse"
       },
       badges: "Badges",
       badgeCount: "{n} / {total}",
@@ -73,6 +77,7 @@
         skilled: ["🧠", "Skilled: every agent has the studio skills"],
         guarded: ["🛡️", "Guarded: CI checks every pull request"],
         "green-branch": ["🌿", "Green branch: this branch's report is green"],
+        elephant: ["🐘", "Elephant memory: 5+ shared memories"],
         "all-star": ["🏆", "All-star: 100% health"]
       },
       refresh: "Refresh",
@@ -112,8 +117,11 @@
         context: "قواعد الوكلاء",
         guard: "الـ Migrations",
         report: "تقرير التغييرات",
-        skills: "المهارات"
+        skills: "المهارات",
+        memory: "ذاكرة المشروع"
       },
+      memoryLine: "{n} ذكريات مشتركة بين كل الوكلاء · آخرها: {latest}",
+      memoryEmpty: "لسا ما في شي محفوظ. احفظ اللي ما بدك تعيد شرحه للوكلاء.",
       appsModels: "{apps} أقسام · {models} models",
       noDjango: "ما لقيت مشروع Django",
       refApp: "المرجع: {ref}",
@@ -132,7 +140,8 @@
       pill: { pass: "تمام", fail: "صلّح", warn: "راجع", off: "مطفي", info: "معلومة", red: "أحمر", yellow: "راجع", green: "أخضر" },
       a: {
         openMap: "افتح الخريطة", newApp: "قسم جديد", setRef: "حدّد المرجع", check: "افحص",
-        sync: "زامن", rules: "القواعد", show: "اعرض", copy: "انسخ", skills: "تصفّح", setup: "جهّز"
+        sync: "زامن", rules: "القواعد", show: "اعرض", copy: "انسخ", skills: "تصفّح", setup: "جهّز",
+        remember: "احفظ", browse: "تصفّح"
       },
       badges: "الأوسمة",
       badgeCount: "{n} / {total}",
@@ -143,6 +152,7 @@
         skilled: ["🧠", "متمكّن: كل وكيل عنده مهارات الاستوديو"],
         guarded: ["🛡️", "محمي: الـ CI بيفحص كل PR"],
         "green-branch": ["🌿", "فرع أخضر: تقرير هالفرع أخضر"],
+        elephant: ["🐘", "ذاكرة فيل: 5 ذكريات مشتركة أو أكتر"],
         "all-star": ["🏆", "نجم: صحة 100%"]
       },
       refresh: "تحديث",
@@ -379,6 +389,11 @@
       missing.length ? t.pill.warn : t.pill.pass,
       missing.length ? fmt(t.skillsMissing, { list: missing.join(", ") }) : t.skillsOk,
       missing.length ? [button(t.a.setup, "agentStudio.setup"), button(t.a.skills, "agentStudio.openSkills", true)] : [button(t.a.skills, "agentStudio.openSkills", true)]));
+    var mem = s.memory || { active: 0 };
+    cards.appendChild(card(t, "🐘", t.cards.memory, mem.active > 0 ? "pass" : "info",
+      mem.active > 0 ? String(mem.active) : t.pill.info,
+      mem.active > 0 ? fmt(t.memoryLine, { n: mem.active, latest: mem.latest || "" }) : t.memoryEmpty,
+      [button(t.a.remember, "agentStudio.addMemory"), mem.active > 0 ? button(t.a.browse, "agentStudio.browseMemory", true) : null]));
     app.appendChild(cards);
 
     // Badges

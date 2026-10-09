@@ -5,6 +5,7 @@ import * as path from "path";
 import { main as contextMain } from "./context/cli";
 import { STUDIO_VERSION } from "./generated/version";
 import { main as guardMain } from "./guard/cli";
+import { main as memoryMain } from "./memory/cli";
 import { main as reportMain } from "./report/cli";
 import { main as scaffoldMain } from "./scaffold/cli";
 import { CLI, RULES_FILE, SCAFFOLD_CONFIG } from "./studio/paths";
@@ -16,6 +17,7 @@ Usage (run from anywhere inside the project):
   ${CLI} scaffold <new|check|apps|reference> ...   Create apps by cloning the approved reference app
   ${CLI} context  <sync|check|print|init|install-ci> Keep CLAUDE.md, AGENTS.md and Copilot instructions in sync
   ${CLI} guard    <check|rules> ...                 Static safety checks for Django migrations
+  ${CLI} memory   <add|list|search|show|outdated>   Shared project memory for every agent and session
   ${CLI} report   [--base <ref>] ...                One-page review of the current branch
   ${CLI} doctor   [--base <ref>]                    Run every check; exit 1 if any fails
   ${CLI} version
@@ -106,6 +108,8 @@ export function main(argv: readonly string[], io: Io): number {
       return contextMain(rest, io);
     case "guard":
       return guardMain(rest, io);
+    case "memory":
+      return memoryMain(rest, io);
     case "report":
       return reportMain(argv, io);
     case "doctor":

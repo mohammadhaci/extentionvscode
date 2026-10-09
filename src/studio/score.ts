@@ -10,7 +10,7 @@ export interface Quest {
 }
 
 export interface Badge {
-  id: "clean-migrations" | "template-keeper" | "in-sync" | "skilled" | "guarded" | "green-branch" | "all-star";
+  id: "clean-migrations" | "template-keeper" | "in-sync" | "skilled" | "guarded" | "green-branch" | "elephant" | "all-star";
   earned: boolean;
 }
 
@@ -76,6 +76,7 @@ export function scoreOf(s: StudioStatus): Score {
     { id: "skilled", earned: s.skills.missing.length === 0 },
     { id: "guarded", earned: s.ci === "installed" },
     { id: "green-branch", earned: s.report.verdict === "green" && s.report.commits > 0 },
+    { id: "elephant", earned: s.memory.active >= 5 },
     { id: "all-star", earned: health >= 100 },
   ];
 

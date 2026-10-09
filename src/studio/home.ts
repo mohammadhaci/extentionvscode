@@ -20,6 +20,8 @@ const ALLOWED_COMMANDS = new Set([
   "agentStudio.copyReport",
   "agentStudio.openMap",
   "agentStudio.openSkills",
+  "agentStudio.addMemory",
+  "agentStudio.browseMemory",
 ]);
 
 type Lang = "en" | "ar";

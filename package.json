@@ -18,15 +18,16 @@
     "Other"
   ],
   "keywords": [
-    "django",
-    "python",
+    "AGENTS.md",
     "agents",
     "claude",
     "codex",
     "copilot",
+    "django",
+    "memory",
     "migrations",
+    "python",
     "scaffold",
-    "AGENTS.md",
     "skills"
   ],
   "activationEvents": [
@@ -126,6 +127,18 @@
         "title": "Copy Change Report (for PR Description)",
         "category": "Agent Studio",
         "icon": "$(copy)"
+      },
+      {
+        "command": "agentStudio.addMemory",
+        "title": "Add to Project Memory",
+        "category": "Agent Studio",
+        "icon": "$(add)"
+      },
+      {
+        "command": "agentStudio.browseMemory",
+        "title": "Browse Project Memory",
+        "category": "Agent Studio",
+        "icon": "$(library)"
       }
     ],
     "viewsContainers": {
